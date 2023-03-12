@@ -6,6 +6,9 @@
   },
   "messages": {
     "commands": false,
+    "blacklist": [
+      "Rose"
+    ],
     "attachments": {
       "ignore": [
         "application/x-tgsticker"
