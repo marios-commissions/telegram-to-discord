@@ -1,0 +1,61 @@
+{
+  "phone": "+447700000000",
+  "api": {
+    "id": 12345,
+    "hash": "daf10e69gdsjkca6247618ac3d0d5352b"
+  },
+  "messages": {
+    "commands": false,
+    "attachments": {
+      "ignore": [
+        "application/x-tgsticker"
+      ]
+    }
+  },
+  "listeners": [
+    {
+      "name": "Free Tier (Forum Group, Specific Users)",
+      "group": "1234",
+      "users": [
+        "username_here"
+      ],
+      "forum": true,
+      "channels": [
+        {
+          "main": true,
+          "webhook": "https://discord.com/api/webhooks/1234/1234"
+        },
+        {
+          "name": "Topic Name",
+          "webhook": "https://discord.com/api/webhooks/1234/1234"
+        }
+      ]
+    },
+    {
+      "name": "VIP Tier (Normal Group, Specific Users)",
+      "group": "1234",
+      "forum": false,
+      "webhook": "https://discord.com/api/webhooks/1234/1234",
+      "users": [
+        "username_here"
+      ]
+    },
+    {
+      "name": "Premium Tier (Forum Group, Catch-All, No user filter)",
+      "group": "1234",
+      "forum": true,
+      "channels": [
+        {
+          "main": true,
+          "webhook": "https://discord.com/api/webhooks/1234/1234"
+        }
+      ]
+    },
+    {
+      "name": "Platinum Tier (Normal Group, Catch-All, No user filter)",
+      "group": "1234",
+      "forum": false,
+      "webhook": "https://discord.com/api/webhooks/1234/1234"
+    }
+  ]
+}
