@@ -20,7 +20,7 @@ async function onMessage({ message }: NewMessageEvent & { chat: Chat; }) {
   const author = await message.getSender() as Api.User;
   const chat = await message.getChat() as Chat;
 
-  if (~config.messages.blacklist.indexOf(author.username)) return;
+  if (!author?.username || ~config.messages.blacklist.indexOf(author.username)) return;
 
   const chatId = chat.id.toString();
 
