@@ -4,6 +4,10 @@
     "id": 12345,
     "hash": "daf10e69gdsjkca6247618ac3d0d5352b"
   },
+  "errors": {
+    "catch": true,
+    "webhook": "https://canary.discord.com/api/webhooks/123/123"
+  },
   "messages": {
     "commands": false,
     "blacklist": [
