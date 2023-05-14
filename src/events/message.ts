@@ -15,139 +15,139 @@ import config from '@config';
 Client.addEventHandler(onMessage, new NewMessage());
 
 async function onMessage({ message }: NewMessageEvent & { chat: Chat; }) {
-  if (!config.messages.commands && message.message.startsWith('/')) return;
+	if (!config.messages.commands && message.message.startsWith('/')) return;
 
-  const author = await message.getSender() as Api.User;
-  const chat = await message.getChat() as Chat;
+	const author = await message.getSender() as Api.User;
+	const chat = await message.getChat() as Chat;
 
-  if (!author?.username || ~config.messages.blacklist.indexOf(author.username)) return;
+	if (!author?.username || ~config.messages.blacklist.indexOf(author.username)) return;
 
-  const chatId = chat.id.toString();
+	const chatId = chat.id.toString();
 
-  Client._log.info(`New message from ${chatId}:${author.username}:${author.id}`);
+	Client._log.info(`New message from ${chatId}:${author.username}:${author.id}`);
 
-  const listeners = config.listeners.filter(l => l.group === chatId);
-  if (!listeners.length) return;
+	const listeners = config.listeners.filter(l => l.group === chatId);
+	if (!listeners.length) return;
 
-  if (chat.forum) {
-    const reply = await message.getReplyMessage() as Reply;
+	if (chat.forum) {
+		const reply = await message.getReplyMessage() as Reply;
 
-    for (const listener of listeners.filter(l => l.forum) as Listener[]) {
-      if (listener.group !== chatId) continue;
+		for (const listener of listeners.filter(l => l.forum) as Listener[]) {
+			if (listener.group !== chatId) continue;
 
-      onForumMessage({ message, chat, author, reply, listener });
-    }
-  } else {
-    for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
-      if (listener.group !== chatId) continue;
+			onForumMessage({ message, chat, author, reply, listener });
+		}
+	} else {
+		for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
+			if (listener.group !== chatId) continue;
 
-      onGroupMessage({ message, chat, author, listener });
-    }
-  }
+			onGroupMessage({ message, chat, author, listener });
+		}
+	}
 }
 
 interface HandlerArguments {
-  listener: Listener;
-  message: Api.Message;
-  author: Api.User;
-  chat: Chat;
+	listener: Listener;
+	message: Api.Message;
+	author: Api.User;
+	chat: Chat;
 }
 
 async function onForumMessage({ message, author, reply, listener, chat }: HandlerArguments & { reply: Reply; }) {
-  const isTopic = reply?.replyTo?.forumTopic ?? false;
-  const topicId = reply?.replyTo?.replyToTopId ?? reply?.replyTo?.replyToMsgId;
+	const isTopic = reply?.replyTo?.forumTopic ?? false;
+	const topicId = reply?.replyTo?.replyToTopId ?? reply?.replyTo?.replyToMsgId;
 
-  const [topic] = (isTopic ? await Client.getMessages(chat.id, { ids: [topicId] }) : [reply]) as Reply[];
+	const [topic] = (isTopic ? await Client.getMessages(chat.id, { ids: [topicId] }) : [reply]) as Reply[];
 
-  const channel = listener.channels?.find((payload) => {
-    if (payload.name === topic?.action?.title) {
-      return true;
-    }
+	const channel = listener.channels?.find((payload) => {
+		if (payload.name === topic?.action?.title) {
+			return true;
+		}
 
-    if (payload.main && !topic?.action?.title) {
-      return true;
-    }
+		if (payload.main && !topic?.action?.title) {
+			return true;
+		}
 
-    return false;
-  });
+		return false;
+	});
 
-  if (listener.channels?.length && !channel) return;
+	if (listener.channels?.length && !channel) return;
 
-  const user = listener.users?.find(user => user === author.username);
-  if (listener.users?.length && !user) return;
+	const user = listener.users?.find(user => user === author.username);
+	if (listener.users?.length && !user) return;
 
-  const files = await getFiles(message);
+	const files = await getFiles(message);
 
-  if (!message.message && !files.length) return;
+	if (!message.rawText && !files.length) return;
 
-  const hasReply = reply?.id !== topic?.id;
-  const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
+	const hasReply = reply?.id !== topic?.id;
+	const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
 
-  Webhook.send(channel?.webhook ?? listener.webhook, {
-    username: listener.name,
-    content: [
-      replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${reply.message}`,
-      `${codeblock(author.firstName + ':')} ${message.message}`
-    ].filter(Boolean).join('\n')
-  }, files);
+	Webhook.send(channel?.webhook ?? listener.webhook, {
+		username: listener.name,
+		content: [
+			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${reply.rawText}`,
+			`${codeblock(author.firstName + ':')} ${message.rawText}`
+		].filter(Boolean).join('\n')
+	}, files);
 }
 
 
 async function onGroupMessage({ message, author, listener }: HandlerArguments) {
-  const user = listener.users?.find(user => user === author.username);
-  if (listener.users?.length && !user) return;
+	const user = listener.users?.find(user => user === author.username);
+	if (listener.users?.length && !user) return;
 
-  const files = await getFiles(message);
+	const files = await getFiles(message);
 
-  if (!message.message && !files.length) return;
+	if (!message.rawText && !files.length) return;
 
-  const reply = await message.getReplyMessage() as Reply;
-  const replyAuthor = await reply?.getSender() as Api.User;
+	const reply = await message.getReplyMessage() as Reply;
+	const replyAuthor = await reply?.getSender() as Api.User;
 
-  Webhook.send(listener.webhook, {
-    username: listener.name,
-    content: [
-      replyAuthor && `> \`${replyAuthor.firstName}:\` ${reply.message}`,
-      `${codeblock(author.firstName + ':')} ${message.message}`
-    ].filter(Boolean).join('\n')
-  }, files);
+	Webhook.send(listener.webhook, {
+		username: listener.name,
+		content: [
+			replyAuthor && `> \`${replyAuthor.firstName}:\` ${reply.rawText}`,
+			`${codeblock(author.firstName + ':')} ${message.rawText}`
+		].filter(Boolean).join('\n')
+	}, files);
 };
 
 async function getFiles(message: Api.Message) {
-  const files = [];
+	const files = [];
 
-  if (!fs.existsSync(Paths.Files)) {
-    fs.mkdirSync(Paths.Files);
-  }
+	if (!fs.existsSync(Paths.Files)) {
+		fs.mkdirSync(Paths.Files);
+	}
 
-  const media = message.media as Api.MessageMediaPhoto;
-  const document = message.media as Api.MessageMediaDocument;
-  const photo = media?.photo;
+	const media = message.media as Api.MessageMediaPhoto;
+	const document = message.media as Api.MessageMediaDocument;
+	const photo = media?.photo;
 
-  if (message.document?.fileReference || media || photo) {
-    const payload = photo ?? document?.document ?? message.document as any;
-    if (!payload) return files;
+	if (message.document?.fileReference || media || photo) {
+		const payload = photo ?? document?.document ?? message.document as any;
+		if (!payload) return files;
 
-    Client._log.info(`Received media payload with mime type ${payload.mimeType}`);
-    if (config.messages.attachments.ignore.includes(payload.mimeType)) {
-      return files;
-    }
+		Client._log.info(`Received media payload with mime type ${payload.mimeType}`);
+		if (config.messages.attachments.ignore.includes(payload.mimeType)) {
+			return files;
+		}
 
-    const media = await message.downloadMedia() as Buffer;
-    const file = path.join(Paths.Files, uuid(30));
+		const media = await message.downloadMedia() as Buffer;
+		const file = path.join(Paths.Files, uuid(30));
 
-    fs.writeFileSync(file, media);
+		fs.writeFileSync(file, media);
 
-    const attribute = payload.attributes?.find(a => a.fileName);
+		const attribute = payload.attributes?.find(a => a.fileName);
 
-    const name = attribute?.fileName ?? [
-      path.basename(file),
-      '.',
-      mimeTypes.extension(payload.mimeType ?? 'image/png')
-    ].join('');
+		const name = attribute?.fileName ?? [
+			path.basename(file),
+			'.',
+			mimeTypes.extension(payload.mimeType ?? 'image/png')
+		].join('');
 
-    files.push({ path: file, name, mimeType: payload.mimeType ?? 'image/png' });
-  }
+		files.push({ path: file, name, mimeType: payload.mimeType ?? 'image/png' });
+	}
 
-  return files;
+	return files;
 }
