@@ -155,9 +155,28 @@ async function getFiles(message: Api.Message) {
 function getContent(msg: Api.Message) {
 	let content = msg.rawText;
 
-	for (const entity of msg.entities.filter(e => e.className === 'MessageEntityTextUrl')) {
-		const wrapper = content.slice(entity.offset, entity.offset + entity.length);
-		content = content.substring(0, entity.offset) + `[${wrapper}](${entity.url})` + content.substring(content.length + entity.offset + entity.length);
+	const entities = msg.entities?.filter(e => e.className === 'MessageEntityTextUrl') ?? [];
+	const offsets = [];
+
+	for (const entity of entities) {
+		const premades = offsets.filter(o => o.orig < entity.offset);
+		entity.originalOffset = entity.offset;
+
+		for (const premade of premades) entity.offset += premade.length;
+
+		const name = content.substr(entity.offset, entity.length);
+		if (name === entity.url || name.startsWith('http')) continue;
+
+		const start = content.slice(0, entity.offset);
+		const end = content.slice(entity.offset + entity.length);
+		const replacement = name === entity.url ? entity.url : `[${name}](${entity.url})`;
+
+		offsets.push({
+			orig: entity.originalOffset,
+			length: replacement.length - entity.length
+		});
+
+		content = start + replacement + end;
 	}
 
 	return content;
