@@ -86,8 +86,8 @@ async function onForumMessage({ message, author, reply, listener, chat }: Handle
 	Webhook.send(channel?.webhook ?? listener.webhook, {
 		username: listener.name,
 		content: [
-			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${reply.rawText}`,
-			`${codeblock(author.firstName + ':')} ${message.rawText}`
+			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply)}`,
+			`${codeblock(author.firstName + ':')} ${getContent(message)}`
 		].filter(Boolean).join('\n')
 	}, files);
 }
@@ -107,8 +107,8 @@ async function onGroupMessage({ message, author, listener }: HandlerArguments) {
 	Webhook.send(listener.webhook, {
 		username: listener.name,
 		content: [
-			replyAuthor && `> \`${replyAuthor.firstName}:\` ${reply.rawText}`,
-			`${codeblock(author.firstName + ':')} ${message.rawText}`
+			replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply)}`,
+			`${codeblock(author.firstName + ':')} ${getContent(message)}`
 		].filter(Boolean).join('\n')
 	}, files);
 };
@@ -150,4 +150,15 @@ async function getFiles(message: Api.Message) {
 	}
 
 	return files;
+}
+
+function getContent(msg: Api.Message) {
+	let content = msg.rawText;
+
+	for (const entity of msg.entities.filter(e => e.className === 'MessageEntityTextUrl')) {
+		const wrapper = content.slice(entity.offset, entity.offset + entity.length);
+		content = content.substring(0, entity.offset) + `[${wrapper}](${entity.url})` + content.substring(content.length + entity.offset + entity.length);
+	}
+
+	return content;
 }
