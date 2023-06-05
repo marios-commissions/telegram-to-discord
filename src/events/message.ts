@@ -14,7 +14,7 @@ import config from '@config';
 
 Client.addEventHandler(onMessage, new NewMessage());
 
-async function onMessage({ message }: NewMessageEvent & { chat: Chat; }) {
+async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; }) {
 	if (!config.messages.commands && message.message.startsWith('/')) return;
 
 	const author = await message.getSender() as Api.User;
@@ -22,24 +22,22 @@ async function onMessage({ message }: NewMessageEvent & { chat: Chat; }) {
 
 	if (!author?.username || ~config.messages.blacklist.indexOf(author.username)) return;
 
-	const chatId = chat.id.toString();
-
 	Client._log.info(`New message from ${chatId}:${author.username}:${author.id}`);
 
-	const listeners = config.listeners.filter(l => l.group === chatId);
+	const listeners = config.listeners.filter(l => Number(l.group) == Number(chatId.toString()));
 	if (!listeners.length) return;
 
 	if (chat.forum) {
 		const reply = await message.getReplyMessage() as Reply;
 
 		for (const listener of listeners.filter(l => l.forum) as Listener[]) {
-			if (listener.group !== chatId) continue;
+			if (Number(listener.group) == Number(chatId.toString())) continue;
 
 			onForumMessage({ message, chat, author, reply, listener });
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
-			if (listener.group !== chatId) continue;
+			if (Number(listener.group) == Number(chatId.toString())) continue;
 
 			onGroupMessage({ message, chat, author, listener });
 		}
