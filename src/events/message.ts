@@ -24,20 +24,20 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	Client._log.info(`New message from ${chatId}:${author.username}:${author.id}`);
 
-	const listeners = config.listeners.filter(l => Number(l.group) == Number(chatId.toString()));
+	const listeners = config.listeners.filter(l => l.group == Number(chatId.toString()));
 	if (!listeners.length) return;
 
 	if (chat.forum) {
 		const reply = await message.getReplyMessage() as Reply;
 
 		for (const listener of listeners.filter(l => l.forum) as Listener[]) {
-			if (Number(listener.group) == Number(chatId.toString())) continue;
+			if (listener.group !== Number(chatId.toString())) continue;
 
 			onForumMessage({ message, chat, author, reply, listener });
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
-			if (Number(listener.group) == Number(chatId.toString())) continue;
+			if (listener.group !== Number(chatId.toString())) continue;
 
 			onGroupMessage({ message, chat, author, listener });
 		}
