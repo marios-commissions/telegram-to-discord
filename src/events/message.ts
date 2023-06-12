@@ -24,38 +24,39 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	Client._log.info(`New message from ${chatId}:${author.username}:${author.id}`);
 
-	const listeners = config.listeners.filter(l => l.group == chatId);
+	const listeners = config.listeners.filter(l => l.group == chatId.toString());
 	if (!listeners.length) return;
 
 	if (chat.forum) {
 		const reply = await message.getReplyMessage() as Reply;
 
 		for (const listener of listeners.filter(l => l.forum) as Listener[]) {
-			if (listener.group != chatId) continue;
+			if (listener.group != chatId.toString()) continue;
 
-			onForumMessage({ message, chat, author, reply, listener });
+			onForumMessage({ message, chat, chatId, author, reply, listener });
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
-			if (listener.group != chatId) continue;
+			if (listener.group != chatId.toString()) continue;
 
-			onGroupMessage({ message, chat, author, listener });
+			onGroupMessage({ message, chat, chatId, author, listener });
 		}
 	}
 }
 
 interface HandlerArguments {
-	listener: Listener;
+	chatId: bigInt.BigInteger;
 	message: Api.Message;
+	listener: Listener;
 	author: Api.User;
 	chat: Chat;
 }
 
-async function onForumMessage({ message, author, reply, listener, chat }: HandlerArguments & { reply: Reply; }) {
+async function onForumMessage({ message, author, chatId, reply, listener }: HandlerArguments & { reply: Reply; }) {
 	const isTopic = reply?.replyTo?.forumTopic ?? false;
 	const topicId = reply?.replyTo?.replyToTopId ?? reply?.replyTo?.replyToMsgId;
 
-	const [topic] = (isTopic ? await Client.getMessages(chat.id, { ids: [topicId] }) : [reply]) as Reply[];
+	const [topic] = (isTopic ? await Client.getMessages(chatId, { ids: [topicId] }) : [reply]) as Reply[];
 
 	const channel = listener.channels?.find((payload) => {
 		if (payload.name === topic?.action?.title) {
@@ -91,7 +92,7 @@ async function onForumMessage({ message, author, reply, listener, chat }: Handle
 }
 
 
-async function onGroupMessage({ message, author, listener }: HandlerArguments) {
+async function onGroupMessage({ message, chatId, author, listener }: HandlerArguments) {
 	const user = listener.users?.find(user => user === author.username);
 	if (listener.users?.length && !user) return;
 

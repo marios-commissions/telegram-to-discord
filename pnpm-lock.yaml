@@ -20,6 +20,11 @@ dependencies:
     specifier: ^2.17.4
     version: 2.17.4
 
+devDependencies:
+  big-integer:
+    specifier: ^1.6.51
+    version: 1.6.51
+
 packages:
 
   /@cryptography/aes@0.1.1:
@@ -69,7 +74,6 @@ packages:
   /big-integer@1.6.51:
     resolution: {integrity: sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==}
     engines: {node: '>=0.6'}
-    dev: false
 
   /buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
