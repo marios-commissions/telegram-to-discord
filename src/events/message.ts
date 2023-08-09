@@ -18,11 +18,11 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 	if (!config.messages.commands && message.message.startsWith('/')) return;
 
 	const author = await message.getSender() as Api.User;
-	const chat = await message.getChat() as Chat & { hasLink: boolean; };
+	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
 
 	if (
-		(!chat.hasLink && !author?.username) ||
-		(author && ~config.messages.blacklist.indexOf(author.username))
+		(!chat.hasLink && !chat.broadcast && !author?.username) ||
+		(author?.username && ~config.messages.blacklist.indexOf(author.username))
 	) return;
 
 	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id}`);
@@ -38,8 +38,8 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 			onForumMessage({ message, chat, chatId, author, reply, listener });
 		}
-	} else if (chat.hasLink) {
-		for (const listener of listeners.filter(l => l.linked) as Listener[]) {
+	} else if (chat.hasLink || chat.broadcast) {
+		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true) as Listener[]) {
 			if (listener.group != chatId.toString()) continue;
 
 			onLinkedMessage({ message, chat, chatId, author, listener });
@@ -61,7 +61,7 @@ interface HandlerArguments {
 	chat: Chat;
 }
 
-async function onForumMessage({ message, author, chatId, reply, listener }: HandlerArguments & { reply: Reply; }) {
+async function onForumMessage({ message, author, chat, chatId, reply, listener }: HandlerArguments & { reply: Reply; }) {
 	const isTopic = reply?.replyTo?.forumTopic ?? false;
 	const topicId = reply?.replyTo?.replyToTopId ?? reply?.replyTo?.replyToMsgId;
 
@@ -95,7 +95,7 @@ async function onForumMessage({ message, author, chatId, reply, listener }: Hand
 		username: listener.name,
 		content: [
 			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply)}`,
-			`${codeblock(author.firstName + ':')} ${getContent(message)}`
+			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message)}`
 		].filter(Boolean).join('\n')
 	}, files);
 }
@@ -117,7 +117,7 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 	}, files);
 };
 
-async function onGroupMessage({ message, author, listener }: HandlerArguments) {
+async function onGroupMessage({ message, author, chat, listener }: HandlerArguments) {
 	const user = listener.users?.find(user => user === author.username);
 	if (listener.users?.length && !user) return;
 
@@ -128,11 +128,12 @@ async function onGroupMessage({ message, author, listener }: HandlerArguments) {
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
 
+
 	Webhook.send(listener.webhook, {
 		username: listener.name,
 		content: [
 			replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply)}`,
-			`${codeblock(author.firstName + ':')} ${getContent(message)}`
+			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message)}`
 		].filter(Boolean).join('\n')
 	}, files);
 };
