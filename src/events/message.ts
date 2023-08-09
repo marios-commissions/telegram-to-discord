@@ -18,11 +18,14 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 	if (!config.messages.commands && message.message.startsWith('/')) return;
 
 	const author = await message.getSender() as Api.User;
-	const chat = await message.getChat() as Chat;
+	const chat = await message.getChat() as Chat & { hasLink: boolean; };
 
-	if (!author?.username || ~config.messages.blacklist.indexOf(author.username)) return;
+	if (
+		(!chat.hasLink && !author?.username) ||
+		(author && ~config.messages.blacklist.indexOf(author.username))
+	) return;
 
-	Client._log.info(`New message from ${chatId}:${author.username}:${author.id}`);
+	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id}`);
 
 	const listeners = config.listeners.filter(l => l.group == chatId.toString());
 	if (!listeners.length) return;
@@ -34,6 +37,12 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 			if (listener.group != chatId.toString()) continue;
 
 			onForumMessage({ message, chat, chatId, author, reply, listener });
+		}
+	} else if (chat.hasLink) {
+		for (const listener of listeners.filter(l => l.linked) as Listener[]) {
+			if (listener.group != chatId.toString()) continue;
+
+			onLinkedMessage({ message, chat, chatId, author, listener });
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
@@ -92,7 +101,23 @@ async function onForumMessage({ message, author, chatId, reply, listener }: Hand
 }
 
 
-async function onGroupMessage({ message, chatId, author, listener }: HandlerArguments) {
+async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
+	const files = await getFiles(message);
+	if (!message.rawText && !files.length) return;
+
+	const reply = await message.getReplyMessage() as Reply;
+	const replyAuthor = await reply?.getSender() as Api.Channel;
+
+	Webhook.send(listener.webhook, {
+		username: listener.name,
+		content: [
+			replyAuthor && `> \`${replyAuthor.title}:\` ${getContent(reply)}`,
+			`${codeblock(chat.title + ':')} ${getContent(message)}`
+		].filter(Boolean).join('\n')
+	}, files);
+};
+
+async function onGroupMessage({ message, author, listener }: HandlerArguments) {
 	const user = listener.users?.find(user => user === author.username);
 	if (listener.users?.length && !user) return;
 
@@ -157,7 +182,7 @@ function getContent(msg: Api.Message) {
 	const entities = msg.entities?.filter(e => e.className === 'MessageEntityTextUrl') ?? [];
 	const offsets = [];
 
-	for (const entity of entities) {
+	for (const entity of entities as (Api.TypeMessageEntity & { originalOffset: number; url: string; })[]) {
 		const premades = offsets.filter(o => o.orig < entity.offset);
 		entity.originalOffset = entity.offset;
 
