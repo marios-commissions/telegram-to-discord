@@ -6,7 +6,7 @@
  */
 
 function codeblock(contents: string) {
-  return '`' + contents + '`';
+	return '`' + contents + '`';
 }
 
 export default codeblock;

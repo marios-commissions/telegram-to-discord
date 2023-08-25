@@ -1,4 +1,4 @@
-import { Api, TelegramClient } from 'telegram';
+import { TelegramClient } from 'telegram';
 import input from 'input';
 
 import { ClientOptions, SessionName } from '@constants';

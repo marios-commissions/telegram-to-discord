@@ -1,36 +1,37 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "ESNext",
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "baseUrl": "src",
-    "paths": {
-      "@utilities": [
-        "utilities/index.ts"
-      ],
-      "@utilities/*": [
-        "utilities/*"
-      ],
-      "@config": [
-        "../config.json"
-      ],
-      "@constants": [
-        "constants.ts"
-      ],
-      "@structures/*": [
-        "structures/*"
-      ],
-      "@structures": [
-        "structures/index.ts"
-      ],
-      "@typings/*": [
-        "../typings/*"
-      ],
-      "@src/*": [
-        "*"
-      ]
-    }
-  },
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "ESNext",
+		"jsx": "react-jsx",
+		"esModuleInterop": true,
+		"moduleResolution": "node",
+		"resolveJsonModule": true,
+		"baseUrl": "src",
+		"paths": {
+			"@utilities": [
+				"utilities/index.ts"
+			],
+			"@utilities/*": [
+				"utilities/*"
+			],
+			"@config": [
+				"../config.json"
+			],
+			"@constants": [
+				"constants.ts"
+			],
+			"@lib/*": [
+				"lib/*"
+			],
+			"@lib": [
+				"lib/index.ts"
+			],
+			"@typings/*": [
+				"../typings/*"
+			],
+			"@src/*": [
+				"*"
+			]
+		}
+	},
 }

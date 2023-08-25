@@ -7,8 +7,8 @@ import { Api } from 'telegram';
 import path from 'path';
 import fs from 'fs';
 
-import { Webhook, Client } from '@structures';
 import { uuid, codeblock } from '@utilities';
+import { Store, Client } from '@lib';
 import { Paths } from '@constants';
 import config from '@config';
 
@@ -91,33 +91,69 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 	const hasReply = reply?.id !== topic?.id;
 	const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
 
-	Webhook.send(channel?.webhook ?? listener.webhook, {
-		username: listener.name,
-		content: [
-			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply)}`,
-			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message)}`
-		].filter(Boolean).join('\n')
-	}, files);
+	Store.add(chatId.toString(), {
+		listener,
+		author: {
+			id: author.id.toString(),
+			username: author.username,
+			displayName: author.firstName + ' ' + author.lastName
+		},
+		channel: {
+			forum: true,
+			id: chatId.toString(),
+			name: chat.title
+		},
+		id: message.id.toString(),
+		text: message.rawText,
+		reply: {
+			author: {
+				displayName: replyAuthor?.firstName + ' ' + replyAuthor?.lastName,
+				id: replyAuthor?.id.toString(),
+				username: replyAuthor?.username
+			},
+			id: reply?.id.toString(),
+			text: reply?.rawText
+		}
+	});
 }
 
 
-async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
+async function onLinkedMessage({ message, chat, author, chatId, listener }: HandlerArguments) {
 	const files = await getFiles(message);
 	if (!message.rawText && !files.length) return;
 
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.Channel;
 
-	Webhook.send(listener.webhook, {
-		username: listener.name,
-		content: [
-			replyAuthor && `> \`${replyAuthor.title}:\` ${getContent(reply)}`,
-			`${codeblock(chat.title + ':')} ${getContent(message)}`
-		].filter(Boolean).join('\n')
-	}, files);
+	Store.add(chatId.toString(), {
+		listener,
+		author: {
+			id: author.id.toString(),
+			username: author.username,
+			displayName: author.firstName + ' ' + author.lastName
+		},
+		channel: {
+			forum: true,
+			id: chatId.toString(),
+			name: chat.title
+		},
+		id: message.id.toString(),
+		text: message.rawText,
+		reply: {
+			author: {
+				displayName: replyAuthor?.firstName + ' ' + replyAuthor?.lastName,
+				id: replyAuthor?.id.toString(),
+				username: replyAuthor?.username
+			},
+			id: reply?.id.toString(),
+			text: reply?.rawText
+		}
+	});
+
+	console.log(Store.messages);
 };
 
-async function onGroupMessage({ message, author, chat, listener }: HandlerArguments) {
+async function onGroupMessage({ message, author, chatId, chat, listener }: HandlerArguments) {
 	const user = listener.users?.find(user => user === author.username);
 	if (listener.users?.length && !user) return;
 
@@ -129,13 +165,39 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 	const replyAuthor = await reply?.getSender() as Api.User;
 
 
-	Webhook.send(listener.webhook, {
-		username: listener.name,
-		content: [
-			replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply)}`,
-			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message)}`
-		].filter(Boolean).join('\n')
-	}, files);
+	Store.add(chatId.toString(), {
+		listener,
+		author: {
+			id: author.id.toString(),
+			username: author.username,
+			displayName: author.firstName + ' ' + author.lastName
+		},
+		channel: {
+			forum: true,
+			id: chatId.toString(),
+			name: chat.title
+		},
+		id: message.id.toString(),
+		text: message.rawText,
+		reply: {
+			author: {
+				displayName: replyAuthor?.firstName + ' ' + replyAuthor?.lastName,
+				id: replyAuthor?.id.toString(),
+				username: replyAuthor?.username
+			},
+			id: reply?.id.toString(),
+			text: reply?.rawText
+		}
+	});
+
+	console.log(Store.messages);
+	// Webhook.send(listener.webhook, {
+	// 	username: listener.name,
+	// 	content: [
+	// 		replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply)}`,
+	// 		`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message)}`
+	// 	].filter(Boolean).join('\n')
+	// }, files);
 };
 
 async function getFiles(message: Api.Message) {
