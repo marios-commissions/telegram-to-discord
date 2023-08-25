@@ -17,6 +17,7 @@ ws.on('connection', (socket) => {
 
 	Store.on('changed', callback);
 	ws.on('message', callback);
+	ws.on('error', console.error);
 	ws.on('close', () => {
 		Logger.info('Client disconnected from WebSocket server.');
 		Store.off('changed', callback);

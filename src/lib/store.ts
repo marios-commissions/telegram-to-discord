@@ -24,7 +24,7 @@ class Store extends EventEmitter {
 
 		for (const chat of chats) {
 			try {
-				const file = path.resolve(dir, chat + '.json');
+				const file = path.resolve(dir, chat);
 				const content = fs.readFileSync(file, 'utf-8');
 
 				this.messages[chat as string] ??= [];
