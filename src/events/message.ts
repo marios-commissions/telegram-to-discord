@@ -245,7 +245,7 @@ function getContent(msg: Api.Message) {
 
 		const start = content.slice(0, entity.offset);
 		const end = content.slice(entity.offset + entity.length);
-		const replacement = name === entity.url ? entity.url : `[${name}](\<${entity.url}>)`;
+		const replacement = name === entity.url ? entity.url : `[${name}](${entity.url})`;
 
 		offsets.push({
 			orig: entity.originalOffset,
