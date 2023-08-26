@@ -94,7 +94,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 	Store.add(chatId.toString(), {
 		listener,
 		author: {
-			id: author.id.toString(),
+			id: author.id?.toString(),
 			username: author.username,
 			displayName: author.firstName + ' ' + author.lastName
 		},
@@ -128,7 +128,7 @@ async function onLinkedMessage({ message, chat, author, chatId, listener }: Hand
 	Store.add(chatId.toString(), {
 		listener,
 		author: {
-			id: author.id.toString(),
+			id: author.id?.toString(),
 			username: author.username,
 			displayName: author.firstName + ' ' + author.lastName
 		},
@@ -168,7 +168,7 @@ async function onGroupMessage({ message, author, chatId, chat, listener }: Handl
 	Store.add(chatId.toString(), {
 		listener,
 		author: {
-			id: author.id.toString(),
+			id: author.id?.toString(),
 			username: author.username,
 			displayName: author.firstName + ' ' + author.lastName
 		},
@@ -189,15 +189,6 @@ async function onGroupMessage({ message, author, chatId, chat, listener }: Handl
 			text: reply?.rawText
 		}
 	});
-
-	console.log(Store.messages);
-	// Webhook.send(listener.webhook, {
-	// 	username: listener.name,
-	// 	content: [
-	// 		replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply)}`,
-	// 		`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message)}`
-	// 	].filter(Boolean).join('\n')
-	// }, files);
 };
 
 async function getFiles(message: Api.Message) {
