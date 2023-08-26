@@ -27,19 +27,18 @@ export interface Listener {
 
 export interface StoredMessage {
 	listener: Listener;
+	time: number;
 	reply?: {
 		id: string;
 		text: string;
 		author: {
 			username: string;
-			displayName: string;
 			id: string;
 		};
 	};
 	text: string;
 	author: {
 		username: string;
-		displayName: string;
 		id: string;
 	};
 	id: string;

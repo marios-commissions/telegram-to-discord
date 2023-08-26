@@ -7,9 +7,9 @@ import { Api } from 'telegram';
 import path from 'path';
 import fs from 'fs';
 
-import { uuid, codeblock } from '@utilities';
 import { Store, Client } from '@lib';
 import { Paths } from '@constants';
+import { uuid } from '@utilities';
 import config from '@config';
 
 Client.addEventHandler(onMessage, new NewMessage());
@@ -93,10 +93,10 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 
 	Store.add(chatId.toString(), {
 		listener,
+		time: Date.now(),
 		author: {
 			id: author.id?.toString(),
 			username: author.username,
-			displayName: author.firstName + ' ' + author.lastName
 		},
 		channel: {
 			forum: true,
@@ -107,7 +107,6 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 		text: message.rawText,
 		reply: {
 			author: {
-				displayName: replyAuthor?.firstName + ' ' + replyAuthor?.lastName,
 				id: replyAuthor?.id.toString(),
 				username: replyAuthor?.username
 			},
@@ -127,10 +126,10 @@ async function onLinkedMessage({ message, chat, author, chatId, listener }: Hand
 
 	Store.add(chatId.toString(), {
 		listener,
+		time: Date.now(),
 		author: {
 			id: author.id?.toString(),
 			username: author.username,
-			displayName: author.firstName + ' ' + author.lastName
 		},
 		channel: {
 			forum: true,
@@ -141,7 +140,6 @@ async function onLinkedMessage({ message, chat, author, chatId, listener }: Hand
 		text: message.rawText,
 		reply: {
 			author: {
-				displayName: replyAuthor?.firstName + ' ' + replyAuthor?.lastName,
 				id: replyAuthor?.id.toString(),
 				username: replyAuthor?.username
 			},
@@ -149,8 +147,6 @@ async function onLinkedMessage({ message, chat, author, chatId, listener }: Hand
 			text: reply?.rawText
 		}
 	});
-
-	console.log(Store.messages);
 };
 
 async function onGroupMessage({ message, author, chatId, chat, listener }: HandlerArguments) {
@@ -167,10 +163,11 @@ async function onGroupMessage({ message, author, chatId, chat, listener }: Handl
 
 	Store.add(chatId.toString(), {
 		listener,
+		time: Date.now(),
 		author: {
 			id: author.id?.toString(),
 			username: author.username,
-			displayName: author.firstName + ' ' + author.lastName
+
 		},
 		channel: {
 			forum: true,
@@ -181,7 +178,6 @@ async function onGroupMessage({ message, author, chatId, chat, listener }: Handl
 		text: message.rawText,
 		reply: {
 			author: {
-				displayName: replyAuthor?.firstName + ' ' + replyAuthor?.lastName,
 				id: replyAuthor?.id.toString(),
 				username: replyAuthor?.username
 			},
@@ -214,7 +210,9 @@ async function getFiles(message: Api.Message) {
 		const media = await message.downloadMedia() as Buffer;
 		const file = path.join(Paths.Files, uuid(30));
 
-		fs.writeFileSync(file, media);
+		if (config.messages.attachments.save) {
+			fs.writeFileSync(file, media);
+		}
 
 		const attribute = payload.attributes?.find(a => a.fileName);
 
