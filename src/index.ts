@@ -2,7 +2,7 @@ import { Client } from '@lib';
 import config from '@config';
 
 Client.initialize();
-require('@lib/web');
+require('./lib/web');
 
 if (config.errors.catch) {
 	process.on('uncaughtException', (error, origin) => {
