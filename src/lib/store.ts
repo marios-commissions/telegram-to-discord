@@ -65,6 +65,13 @@ class Store extends EventEmitter {
 
 		this.save();
 	}
+
+	delete() {
+		this.messages = {};
+
+		fs.rmdirSync(this.dir, { recursive: true });
+		fs.mkdirSync(this.dir);
+	}
 }
 
 export default new Store(path.resolve(__dirname, '..', '..', 'messages'));

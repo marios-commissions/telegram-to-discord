@@ -1,5 +1,5 @@
 import { createLogger } from '@lib/logger';
-import { WebSocketServer } from 'ws';
+import { MessageEvent, WebSocketServer } from 'ws';
 import { Store } from '@lib';
 
 const Logger = createLogger('Web');
@@ -16,9 +16,17 @@ ws.on('connection', (socket) => {
 
 
 	Store.on('changed', callback);
-	ws.on('message', callback);
-	ws.on('error', console.error);
-	ws.on('close', () => {
+	socket.on('error', console.error);
+
+	socket.on('message', (data) => {
+		if (data.toString() === 'DELETE') {
+			Store.delete();
+		}
+
+		callback();
+	});
+
+	socket.on('close', () => {
 		Logger.info('Client disconnected from WebSocket server.');
 		Store.off('changed', callback);
 	});
