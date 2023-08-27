@@ -161,7 +161,9 @@ async function getFiles(message: Api.Message) {
 		const media = await message.downloadMedia() as Buffer;
 		const file = path.join(Paths.Files, uuid(30));
 
-		fs.writeFileSync(file, media);
+		if (config.messages.attachments.save) {
+			fs.writeFileSync(file, media);
+		}
 
 		const attribute = payload.attributes?.find(a => a.fileName);
 

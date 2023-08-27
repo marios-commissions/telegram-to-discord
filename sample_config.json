@@ -14,6 +14,7 @@
       "Rose"
     ],
     "attachments": {
+      "save": true,
       "ignore": [
         "application/x-tgsticker"
       ]
