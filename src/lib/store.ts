@@ -14,6 +14,7 @@ class Store extends EventEmitter {
 		super();
 
 		this.save = debounce(this.save, 300);
+		if (!fs.existsSync(file)) return this;
 
 		const content = fs.readFileSync(file, 'utf-8');
 
