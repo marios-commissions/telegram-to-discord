@@ -91,7 +91,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 	const hasReply = reply?.id !== topic?.id;
 	const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
 
-	Store.add(chatId.toString(), {
+	Store.add({
 		listener,
 		time: Date.now(),
 		author: {
@@ -111,7 +111,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 				username: replyAuthor?.username
 			},
 			id: reply?.id.toString(),
-			text: reply ? getContent(reply) : null 
+			text: reply ? getContent(reply) : null
 		}
 	});
 }
@@ -124,7 +124,7 @@ async function onLinkedMessage({ message, chat, author, chatId, listener }: Hand
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.Channel;
 
-	Store.add(chatId.toString(), {
+	Store.add({
 		listener,
 		time: Date.now(),
 		author: {
@@ -144,7 +144,7 @@ async function onLinkedMessage({ message, chat, author, chatId, listener }: Hand
 				username: replyAuthor?.username
 			},
 			id: reply?.id.toString(),
-			text: reply ? getContent(reply) : null 
+			text: reply ? getContent(reply) : null
 		}
 	});
 };
@@ -161,7 +161,7 @@ async function onGroupMessage({ message, author, chatId, chat, listener }: Handl
 	const replyAuthor = await reply?.getSender() as Api.User;
 
 
-	Store.add(chatId.toString(), {
+	Store.add({
 		listener,
 		time: Date.now(),
 		author: {
@@ -182,7 +182,7 @@ async function onGroupMessage({ message, author, chatId, chat, listener }: Handl
 				username: replyAuthor?.username
 			},
 			id: reply?.id.toString(),
-			text: reply ? getContent(reply) : null 
+			text: reply ? getContent(reply) : null
 		}
 	});
 };

@@ -11,8 +11,7 @@ ws.on('connection', (socket) => {
 	Logger.info('Client connected to WebSocket server.');
 
 	function callback() {
-		const content = Object.values(Store.messages).flat(Infinity) as unknown as StoredMessage[];
-		const sorted = content.sort((a, b) => a.time - b.time).slice(250);
+		const sorted = Store.messages.slice(-250).sort((a, b) => a.time - b.time);
 
 		const messages = JSON.stringify(sorted);
 		socket.send(messages);

@@ -1,77 +1,56 @@
 import type { StoredMessage } from '@typings/structs';
 import EventEmitter from 'node:events';
+import { debounce } from '@utilities';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import fs from 'node:fs';
-import { debounce } from '@utilities';
 
 class Store extends EventEmitter {
-	messages: Record<string, StoredMessage[]> = {};
+	messages: StoredMessage[] = [];
 
 	constructor(
-		public dir: string
+		public file: string
 	) {
 		super();
 
 		this.save = debounce(this.save, 300);
 
-		if (!fs.existsSync(dir)) {
-			fs.mkdirSync(dir);
-			return this;
-		}
+		const content = fs.readFileSync(file, 'utf-8');
 
-		const chats = fs.readdirSync(dir, { withFileTypes: false });
-
-		for (const chat of chats) {
-			try {
-				const file = path.resolve(dir, chat);
-				const content = fs.readFileSync(file, 'utf-8');
-
-				this.messages[chat as string] ??= [];
-				this.messages[chat as string].push(JSON.parse(content) as StoredMessage);
-			} catch (e) {
-				console.error(`Skipping chat ${chat} as reading the file failed:`, e);
-			}
+		try {
+			this.messages = JSON.parse(content) as StoredMessage[];
+		} catch (e) {
+			console.error(`Reading the messages file failed:`, e);
 		}
 	}
 
 	async save() {
-		if (!fs.existsSync(this.dir)) await fsp.mkdir(this.dir);
+		try {
+			const content = JSON.stringify(this.messages, null, 2);
 
-		for (const id in this.messages) {
-			try {
-				const chatId = path.resolve(this.dir, id + '.json');
-				const messages = this.messages[id];
-				const content = JSON.stringify(messages, null, 2);
-
-				await fsp.writeFile(chatId, content, 'utf-8');
-				this.emit('saved-chat', id);
-			} catch (e) {
-				console.error(`Failed saving chat ${id}:`, e);
-			}
+			await fsp.writeFile(this.file, content, 'utf-8');
+			this.emit('saved');
+		} catch (e) {
+			console.error(`Failed saving messages:`, e);
 		}
-
-		this.emit('saved');
 	}
 
-	add(chat: string, message: StoredMessage) {
+	add(message: StoredMessage) {
 		if (!message.reply?.id) {
 			delete message.reply;
 		}
 
-		this.messages[chat] ??= [];
-		this.messages[chat].push(message);
+		this.messages.push(message);
 		this.emit('changed');
 
 		this.save();
 	}
 
 	delete() {
-		this.messages = {};
+		this.messages = [];
 
-		fs.rmdirSync(this.dir, { recursive: true });
-		fs.mkdirSync(this.dir);
+		fs.rmSync(this.file);
 	}
 }
 
-export default new Store(path.resolve(__dirname, '..', '..', 'messages'));
+export default new Store(path.resolve(__dirname, '..', '..', 'messages.json'));
