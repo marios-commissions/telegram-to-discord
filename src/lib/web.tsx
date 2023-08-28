@@ -1,5 +1,6 @@
+import { StoredMessage } from '@typings/structs';
 import { createLogger } from '@lib/logger';
-import { MessageEvent, WebSocketServer } from 'ws';
+import { WebSocketServer } from 'ws';
 import { Store } from '@lib';
 
 const Logger = createLogger('Web');
@@ -10,7 +11,10 @@ ws.on('connection', (socket) => {
 	Logger.info('Client connected to WebSocket server.');
 
 	function callback() {
-		const messages = JSON.stringify(Store.messages);
+		const content = Object.values(Store.messages).flat(Infinity) as unknown as StoredMessage[];
+		const sorted = content.sort((a, b) => a.time - b.time).slice(250);
+
+		const messages = JSON.stringify(sorted);
 		socket.send(messages);
 	}
 
