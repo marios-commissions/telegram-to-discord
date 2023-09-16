@@ -173,7 +173,7 @@ async function getFiles(message: Api.Message) {
 			mimeTypes.extension(payload.mimeType ?? 'image/png')
 		].join('');
 
-		files.push({ path: file, name, mimeType: payload.mimeType ?? 'image/png' });
+		files.push({ buffer: media, path: file, name, mimeType: payload.mimeType ?? 'image/png' });
 	}
 
 	return files;
