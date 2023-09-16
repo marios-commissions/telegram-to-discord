@@ -7,7 +7,7 @@ if (config.errors.catch) {
 	process.on('uncaughtException', (error, origin) => {
 		Webhook.send(config.errors.webhook, {
 			content: [
-				'**An error occured inside discord-twitter-forward**',
+				'**An error occured inside telegram-to-discord**',
 				'',
 				`Origin: \`${origin ?? 'Unknown'}\``,
 				`Cause: \`${error.cause ?? 'Unknown'}\``,
