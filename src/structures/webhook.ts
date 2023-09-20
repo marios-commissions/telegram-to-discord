@@ -1,8 +1,7 @@
 import { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
 import { createLogger } from '@structures/logger';
-import { } from '@discordjs/util';
-import FormData from 'form-data';
 import { splitMessage } from '@utilities';
+import FormData from 'form-data';
 
 interface File {
 	path: string;
@@ -53,11 +52,11 @@ class Webhook {
 					if (data) {
 						const res = JSON.parse(data);
 
-						// Logger.debug('Webhook response:', res);
+						Logger.debug('Webhook response:', res);
 					}
 				});
 
-				// Logger.debug(`Forwarding payload to webhook.`, { url, message, files });
+				Logger.debug(`Forwarding payload to webhook.`, { url, message, files });
 				res.resume();
 			});
 		} catch (e) {
