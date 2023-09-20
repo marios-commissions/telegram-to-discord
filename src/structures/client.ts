@@ -2,7 +2,10 @@ import { Api, TelegramClient } from 'telegram';
 import input from 'input';
 
 import { ClientOptions, SessionName } from '@constants';
+import { createLogger } from '@structures/logger';
 import config from '@config';
+
+const Logger = createLogger('Client');
 
 class Client extends TelegramClient {
 	constructor() {
@@ -22,7 +25,7 @@ class Client extends TelegramClient {
 		const dialogs = await this.getDialogs();
 		const groups = dialogs.filter(d => d.isChannel || d.isGroup);
 
-		console.log('» Channels:\n' + groups.map(e => `${e.name} » ${e.id.toString()}`).join('\n'));
+		Logger.info('Channels\n' + groups.map(e => `${e.name} » ${e.id.toString()}`).join('\n'));
 
 		import('@src/events');
 	}

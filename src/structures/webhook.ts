@@ -1,5 +1,8 @@
 import { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
+import { createLogger } from '@structures/logger';
+import { } from '@discordjs/util';
 import FormData from 'form-data';
+import { splitMessage } from '@utilities';
 
 interface File {
 	path: string;
@@ -8,8 +11,24 @@ interface File {
 	name: string;
 }
 
+const Logger = createLogger('Webhook');
+
 class Webhook {
 	async send(url: string, message: RESTPostAPIWebhookWithTokenJSONBody, files?: File[]) {
+		if (message.content.length > 2000) {
+			const chunks = splitMessage(message.content);
+
+			for (const chunk of chunks) {
+				await this.send(url, { ...message, content: chunk });
+			}
+
+			if (files.length) {
+				await this.send(url, { ...message, content: '' }, files);
+			}
+
+			return;
+		}
+
 		try {
 			const form = new FormData();
 
@@ -24,13 +43,25 @@ class Webhook {
 				}
 			}
 
-			form.submit(url, (err, res) => {
-				if (err) throw err;
+			await form.submit(url, (err, res) => {
+				if (err) {
+					(err);
+					throw err;
+				}
 
+				res.on('data', data => {
+					if (data) {
+						const res = JSON.parse(data);
+
+						// Logger.debug('Webhook response:', res);
+					}
+				});
+
+				// Logger.debug(`Forwarding payload to webhook.`, { url, message, files });
 				res.resume();
 			});
 		} catch (e) {
-			console.error('!!! Failed to send to webhook !!!\n', e, { url, message });
+			Logger.error('Failed to send to webhook!\n', e, { url, message });
 		}
 	};
 }
