@@ -1,4 +1,5 @@
 import { colorize } from '@utilities';
+import config from '@config';
 
 export function log(...args: string[]): void {
 	return console.log('»', ...args);
@@ -17,6 +18,8 @@ export function warn(...args: string[]): void {
 }
 
 export function debug(...args: string[]): void {
+	if (!config.debug) return;
+
 	return console.debug(colorize('»', 'gray'), ...args);
 }
 

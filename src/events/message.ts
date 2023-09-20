@@ -231,7 +231,7 @@ async function getFiles(message: Api.Message) {
 function getContent(msg: Api.Message) {
 	let content = msg.rawText;
 
-	const entities = msg.entities?.filter(e => e.className === 'MessageEntityTextUrl') ?? [];
+	const entities = (msg.entities?.filter(e => e.className === 'MessageEntityTextUrl') ?? []).sort((a, b) => b.offset - a.offset);
 	const offsets = [];
 
 	for (const entity of entities as (Api.TypeMessageEntity & { originalOffset: number; url: string; })[]) {
@@ -248,7 +248,7 @@ function getContent(msg: Api.Message) {
 		const replacement = name === entity.url ? entity.url : `[${name}](${entity.url})`;
 
 		offsets.push({
-			orig: entity.originalOffset,
+			orig: entity.originalOffset ?? entity.offset,
 			length: replacement.length - entity.length
 		});
 

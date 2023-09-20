@@ -1,5 +1,6 @@
 {
 	"phone": "+447700000000",
+	"debug": false,
 	"api": {
 		"id": 12345,
 		"hash": "daf10e69gdsjkca6247618ac3d0d5352b"
