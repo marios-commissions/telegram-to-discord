@@ -51,11 +51,11 @@
 			"@constants": [
 				"constants.ts"
 			],
-			"@lib/*": [
-				"lib/*"
+			"@structures/*": [
+				"structures/*"
 			],
-			"@lib": [
-				"lib/index.ts"
+			"@structures": [
+				"structures/index.ts"
 			],
 			"@typings/*": [
 				"../typings/*"
