@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  big-integer:
+    specifier: ^1.6.51
+    version: 1.6.51
   express:
     specifier: ^4.18.2
     version: 4.18.2
@@ -49,9 +52,6 @@ devDependencies:
   '@types/ws':
     specifier: ^8.5.8
     version: 8.5.8
-  big-integer:
-    specifier: ^1.6.51
-    version: 1.6.51
   discord-api-types:
     specifier: ^0.37.61
     version: 0.37.61
@@ -213,6 +213,7 @@ packages:
   /big-integer@1.6.51:
     resolution: {integrity: sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==}
     engines: {node: '>=0.6'}
+    dev: false
 
   /body-parser@1.20.1:
     resolution: {integrity: sha512-jWi7abTbYwajOytWCQc37VulmWiRae5RyTpaCyDcS5/lMdtwSz5lOpDE67srw/HYe35f1z3fDQw+3txg7gNtWw==}

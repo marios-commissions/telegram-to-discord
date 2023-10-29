@@ -10,6 +10,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "big-integer": "^1.6.51",
     "express": "^4.18.2",
     "form-data": "^4.0.0",
     "input": "^1.0.1",
@@ -26,7 +27,6 @@
     "@types/react": "^18.2.33",
     "@types/react-dom": "^18.2.14",
     "@types/ws": "^8.5.8",
-    "big-integer": "^1.6.51",
     "discord-api-types": "^0.37.61"
   }
 }
