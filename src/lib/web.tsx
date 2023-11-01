@@ -12,21 +12,31 @@ ws.on('connection', (socket) => {
 
 	function callback() {
 		const sorted = Store.messages.slice(-250).sort((a, b) => a.time - b.time);
+		const data = JSON.stringify({ type: 'MESSAGES_UPDATE', data: sorted ?? [] });
 
-		const messages = JSON.stringify(sorted);
-		socket.send(messages);
+		socket.send(data);
 	}
-
 
 	Store.on('changed', callback);
 	socket.on('error', console.error);
 
 	socket.on('message', (data) => {
-		if (data.toString() === 'DELETE') {
-			Store.delete();
-		}
+		try {
+			const payload = JSON.parse(data.toString());
 
-		callback();
+			switch (payload.type) {
+				case 'DELETE':
+					if (payload.password !== process.env.PASSWORD) {
+						return socket.send(JSON.stringify({ type: 'DELETE_FAILED' }));
+					}
+
+					Store.delete();
+					socket.send(JSON.stringify({ type: 'DELETE_SUCCESS' }));
+					break;
+			}
+		} catch (error) {
+			Logger.error('Failed to handle payload:', data.toString(), error);
+		}
 	});
 
 	socket.on('close', () => {

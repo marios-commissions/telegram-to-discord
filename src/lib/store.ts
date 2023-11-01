@@ -49,8 +49,7 @@ class Store extends EventEmitter {
 
 	delete() {
 		this.messages = [];
-
-		fs.rmSync(this.file);
+		if (fs.existsSync(this.file)) fs.rmSync(this.file);
 	}
 }
 

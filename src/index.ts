@@ -1,6 +1,8 @@
 import sourcemaps from 'source-map-support';
 sourcemaps.install();
 
+require('dotenv').config();
+
 import { Client } from '@lib';
 import config from '@config';
 
