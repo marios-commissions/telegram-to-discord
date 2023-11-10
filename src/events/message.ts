@@ -206,5 +206,9 @@ function getContent(msg: Api.Message) {
 		content = start + replacement + end;
 	}
 
+	for (const [subject, replacement] of Object.entries(config.messages.replacements)) {
+		content = content.replaceAll(subject, replacement);
+	}
+
 	return content;
 }

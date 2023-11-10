@@ -11,6 +11,10 @@
 	},
 	"messages": {
 		"commands": false,
+		"replacements": {
+			"://twitter.com": "://fxtwitter.com",
+			"://x.com": "://fxtwitter.com"
+		},
 		"blacklist": [
 			"Rose"
 		],
