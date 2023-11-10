@@ -19,15 +19,5 @@ if (config.errors.catch) {
 			`Type: ${error.name}`,
 			`Stack: ${error.stack}\n`,
 		].join('\n'));
-		// Webhook.send(config.errors.webhook, {
-		// 	content: console.error([
-		// 		'**An error occured inside discord-twitter-forward**',
-		// 		'',
-		// 		`Origin: \`${origin ?? 'Unknown'}\``,
-		// 		`Cause: \`${error.cause ?? 'Unknown'}\``,
-		// 		`Type: \`${error.name}\``,
-		// 		`Stack: \`\`\`\n${error.stack}\n\`\`\``,
-		// 	].join('\n'))
-		// });
 	});
 }
