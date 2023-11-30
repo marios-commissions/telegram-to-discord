@@ -1,15 +1,9 @@
 import type { Chat, Reply, Listener } from '@typings/structs';
 import type { NewMessageEvent } from 'telegram/events';
-
+import { getContent, getFiles } from '@utilities';
 import { NewMessage } from 'telegram/events';
-import mimeTypes from 'mime-types';
-import { Api } from 'telegram';
-import path from 'path';
-import fs from 'fs';
-
 import { Store, Client } from '@lib';
-import { Paths } from '@constants';
-import { uuid } from '@utilities';
+import { Api } from 'telegram';
 import config from '@config';
 
 Client.addEventHandler(onMessage, new NewMessage());
@@ -17,6 +11,7 @@ Client.addEventHandler(onMessage, new NewMessage());
 async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; }) {
 	if (!config.messages.commands && message.message.startsWith('/')) return;
 
+	console.log(chatId);
 	const author = await message.getSender() as Api.User;
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
 
@@ -186,80 +181,3 @@ async function onGroupMessage({ message, author, chatId, chat, listener }: Handl
 		}
 	});
 };
-
-async function getFiles(message: Api.Message) {
-	const files = [];
-
-	if (!fs.existsSync(Paths.Files)) {
-		fs.mkdirSync(Paths.Files);
-	}
-
-	const media = message.media as Api.MessageMediaPhoto;
-	const document = message.media as Api.MessageMediaDocument;
-	const photo = media?.photo;
-
-	if (message.document?.fileReference || media || photo) {
-		const payload = photo ?? document?.document ?? message.document as any;
-		if (!payload) return files;
-
-		Client._log.info(`Received media payload with mime type ${payload.mimeType}`);
-		if (config.messages.attachments.ignore.includes(payload.mimeType)) {
-			return files;
-		}
-
-		const media = await message.downloadMedia() as Buffer;
-		const file = path.join(Paths.Files, uuid(30));
-
-		if (config.messages.attachments.save) {
-			fs.writeFileSync(file, media);
-		}
-
-		const attribute = payload.attributes?.find(a => a.fileName);
-
-		const name = attribute?.fileName ?? [
-			path.basename(file),
-			'.',
-			mimeTypes.extension(payload.mimeType ?? 'image/png')
-		].join('');
-
-		files.push({ path: file, name, mimeType: payload.mimeType ?? 'image/png' });
-	}
-
-	return files;
-}
-
-function getContent(msg: Api.Message) {
-	let content = msg.rawText;
-
-	const entities = (msg.entities?.filter(e => e.className === 'MessageEntityTextUrl') ?? []).sort((a, b) => b.offset - a.offset);
-	const offsets = [];
-
-	for (const entity of entities as (Api.TypeMessageEntity & { originalOffset: number; url: string; })[]) {
-		const premades = offsets.filter(o => o.orig < entity.offset);
-		entity.originalOffset = entity.offset;
-
-		for (const premade of premades) entity.offset += premade.length;
-
-		const name = content.substr(entity.offset, entity.length);
-		if (name === entity.url || name.startsWith('http')) continue;
-
-		const start = content.slice(0, entity.offset);
-		const end = content.slice(entity.offset + entity.length);
-		const replacement = name === entity.url ? entity.url : `[${name}](${entity.url})`;
-
-		offsets.push({
-			orig: entity.originalOffset ?? entity.offset,
-			length: replacement.length - entity.length
-		});
-
-		content = start + replacement + end;
-	}
-
-	if (config.messages?.replacements) {
-		for (const [subject, replacement] of Object.entries(config.messages.replacements)) {
-			content = content.replaceAll(subject, replacement);
-		}
-	}
-
-	return content;
-}

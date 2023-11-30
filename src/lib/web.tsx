@@ -1,14 +1,11 @@
-import { StoredMessage } from '@typings/structs';
-import { createLogger } from '@lib/logger';
 import { WebSocketServer } from 'ws';
+import Client from '@lib/client';
 import { Store } from '@lib';
-
-const Logger = createLogger('Web');
 
 const ws = new WebSocketServer({ port: 8098 });
 
 ws.on('connection', (socket) => {
-	Logger.info('Client connected to WebSocket server.');
+	Client.logger.info('Client connected to WebSocket server.');
 
 	function callback() {
 		const sorted = Store.messages.slice(-250).sort((a, b) => a.time - b.time);
@@ -35,12 +32,12 @@ ws.on('connection', (socket) => {
 					break;
 			}
 		} catch (error) {
-			Logger.error('Failed to handle payload:', data.toString(), error);
+			Client.logger.error('Failed to handle payload:' + ' ' + data.toString() + ' ' + error);
 		}
 	});
 
 	socket.on('close', () => {
-		Logger.info('Client disconnected from WebSocket server.');
+		Client.logger.info('Client disconnected from WebSocket server.');
 		Store.off('changed', callback);
 	});
 
@@ -48,5 +45,5 @@ ws.on('connection', (socket) => {
 });
 
 ws.on('listening', () => {
-	Logger.success('WebSocket server listening on port 8098');
+	Client.logger.info('WebSocket server listening on port 8098');
 });

@@ -48,6 +48,7 @@
 			"name": "VIP Tier (Normal Group, Specific Users)",
 			"group": "1234",
 			"forum": false,
+			"pins": true,
 			"webhook": "https://discord.com/api/webhooks/1234/1234",
 			"users": [
 				"username_here"

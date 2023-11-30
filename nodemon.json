@@ -6,6 +6,7 @@
 		"./.git/**",
 		"./node_modules/**",
 		"Forwarder",
-		"./messages"
+		"./messages",
+		"messages.json"
 	]
 }
