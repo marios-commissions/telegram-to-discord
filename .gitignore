@@ -3,3 +3,4 @@ dist
 files
 .keepsecret
 config.json
+messages.json

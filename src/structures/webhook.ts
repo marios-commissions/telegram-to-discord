@@ -1,7 +1,8 @@
 import { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
-import { createLogger } from '@structures/logger';
 import { splitMessage } from '@utilities';
+import Client from '@structures/client';
 import FormData from 'form-data';
+import { inspect } from 'util';
 
 interface File {
 	path: string;
@@ -9,8 +10,6 @@ interface File {
 	buffer: Buffer;
 	name: string;
 }
-
-const Logger = createLogger('Webhook');
 
 class Webhook {
 	async send(url: string, message: RESTPostAPIWebhookWithTokenJSONBody, files?: File[]) {
@@ -42,25 +41,33 @@ class Webhook {
 				}
 			}
 
-			await form.submit(url, (err, res) => {
-				if (err) {
-					(err);
-					throw err;
-				}
-
-				res.on('data', data => {
-					if (data) {
-						const res = JSON.parse(data);
-
-						Logger.debug('Webhook response:', res);
+			return await new Promise((resolve, reject) => {
+				form.submit(url, (err, res) => {
+					if (err) {
+						(err);
+						throw err;
 					}
-				});
 
-				Logger.debug(`Forwarding payload to webhook.`, { url, message, files });
-				res.resume();
+					res.on('data', data => {
+						if (data) {
+							const res = JSON.parse(data);
+							Client.logger.debug('Webhook response:\n');
+							Client.logger.debug(res);
+						}
+					});
+
+					res.on('end', resolve);
+					res.on('error', reject);
+
+					Client.logger.debug(`Forwarding payload to webhook.`);
+					Client.logger.debug(inspect({ url, message, files }));
+					res.resume();
+				});
 			});
 		} catch (e) {
-			Logger.error('Failed to send to webhook!\n', e, { url, message });
+			Client.logger.error('Failed to send to webhook!\n');
+			Client.logger.error(inspect(e));
+			Client.logger.error(inspect({ url, message }));
 		}
 	};
 }
