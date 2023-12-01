@@ -11,6 +11,13 @@
 	},
 	"messages": {
 		"commands": false,
+		"embeds": false,
+		"capture": {
+			"TITLE": "🔫 .+[\\s]",
+			"DETAILS": "FDV:.+[\\s]",
+			"ADDRESS": "(\\b0x[a-f0-9]{40}\\b)(?:\\n)"
+		},
+		"capture_format": "{{TITLE}}, {{DETAILS}}, {{ADDRESS}}",
 		"replacements": {
 			"://twitter.com": "://fxtwitter.com",
 			"://x.com": "://fxtwitter.com"

@@ -2,7 +2,7 @@ import { Api } from 'telegram';
 import config from '@config';
 
 function getContent(msg: Api.Message) {
-	let content = msg.rawText;
+	let content: string | string[] = msg.rawText;
 
 	const entities = (msg.entities?.filter(e => e.className === 'MessageEntityTextUrl') ?? []).sort((a, b) => b.offset - a.offset);
 	const offsets = [];
@@ -18,7 +18,7 @@ function getContent(msg: Api.Message) {
 
 		const start = content.slice(0, entity.offset);
 		const end = content.slice(entity.offset + entity.length);
-		const replacement = name === entity.url ? entity.url : `[${name}](${entity.url})`;
+		const replacement = name === entity.url ? entity.url : `[${name}](${!(config.messages.embeds ?? true) ? '<' + entity.url + '>' : entity.url})`;
 
 		offsets.push({
 			orig: entity.originalOffset ?? entity.offset,
@@ -34,7 +34,33 @@ function getContent(msg: Api.Message) {
 		}
 	}
 
-	return content;
+	if (config.messages?.capture) {
+		let _content = content;
+		let temp = {};
+
+		for (const capture in config.messages.capture) {
+			console.log(config.messages.capture[capture], 'gmi');
+			const regex = new RegExp(config.messages.capture[capture], 'gmi');
+			temp[capture] = _content.match(regex);
+		}
+
+		content = [];
+		const results = (Object.values(temp)[0] as string)?.length ?? 0;
+
+		console.log(results);
+
+		for (let i = 0; i < results; i++) {
+			let out = config.messages.capture_format;
+			for (const [key, value] of Object.entries(temp)) {
+				if (!value[i]) continue;
+				out = out.replaceAll(`{{${key}}}`, (value[i] as string).replaceAll('\n', ''));
+			};
+
+			content.push(out);
+		}
+	}
+
+	return Array.isArray(content) ? content.join('\n') : content;
 }
 
 export default getContent;

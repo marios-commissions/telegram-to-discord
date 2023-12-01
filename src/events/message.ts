@@ -2,7 +2,7 @@ import type { Chat, Reply, Listener } from '@typings/structs';
 import type { NewMessageEvent } from 'telegram/events';
 import { codeblock, getContent, getFiles } from '@utilities';
 import { NewMessage } from 'telegram/events';
-import { Client, Webhook } from '@structures';
+import { Client, Webhook } from '@structures/index';
 import { Api } from 'telegram';
 import config from '@config';
 
@@ -11,7 +11,6 @@ Client.addEventHandler(onMessage, new NewMessage());
 async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; }) {
 	if (!config.messages.commands && message.message.startsWith('/')) return;
 
-	console.log(chatId);
 	const author = await message.getSender() as Api.User;
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
 
@@ -22,8 +21,10 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id}`);
 
+	console.log(getContent(message));
 	const listeners = config.listeners.filter(l => l.group == chatId.toString());
 	if (!listeners.length) return;
+
 
 	if (chat.forum) {
 		const reply = await message.getReplyMessage() as Reply;
