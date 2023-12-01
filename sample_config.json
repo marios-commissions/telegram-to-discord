@@ -11,7 +11,8 @@
 	},
 	"messages": {
 		"commands": false,
-		"embeds": false,
+		"embeds": true,
+		"author": true,
 		"capture": {
 			"TITLE": "🔫 .+[\\s]",
 			"DETAILS": "FDV:.+[\\s]",

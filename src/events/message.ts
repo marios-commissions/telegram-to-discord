@@ -108,7 +108,7 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 		username: listener.name,
 		content: [
 			replyAuthor && `> \`${replyAuthor.title}:\` ${getContent(reply)}`,
-			`${codeblock(chat.title + ':')} ${getContent(message)}`
+			`${config.messages.author ? codeblock(chat.title + ':') : ''} ${getContent(message)}`.trim()
 		].filter(Boolean).join('\n')
 	}, files);
 };
@@ -129,7 +129,7 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 		username: listener.name,
 		content: [
 			replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply)}`,
-			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message)}`
+			`${config.messages.author ? codeblock(author?.firstName ?? chat.title + ':') : ''} ${getContent(message)}`.trim()
 		].filter(Boolean).join('\n')
 	}, files);
 };

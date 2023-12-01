@@ -39,15 +39,12 @@ function getContent(msg: Api.Message) {
 		let temp = {};
 
 		for (const capture in config.messages.capture) {
-			console.log(config.messages.capture[capture], 'gmi');
 			const regex = new RegExp(config.messages.capture[capture], 'gmi');
 			temp[capture] = _content.match(regex);
 		}
 
 		content = [];
 		const results = (Object.values(temp)[0] as string)?.length ?? 0;
-
-		console.log(results);
 
 		for (let i = 0; i < results; i++) {
 			let out = config.messages.capture_format;
