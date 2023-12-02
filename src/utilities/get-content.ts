@@ -49,7 +49,7 @@ function getContent(msg: Api.Message) {
 		for (let i = 0; i < results; i++) {
 			let out = config.messages.capture_format;
 			for (const [key, value] of Object.entries(temp)) {
-				if (!value[i]) continue;
+				if (!value?.[i]) continue;
 				out = out.replaceAll(`{{${key}}}`, (value[i] as string).replaceAll('\n', ''));
 			};
 
