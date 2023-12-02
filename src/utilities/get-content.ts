@@ -57,7 +57,7 @@ function getContent(msg: Api.Message) {
 		}
 	}
 
-	return Array.isArray(content) ? content.join('\n') : content;
+	return (config.messages?.prepend !== void 0 ? config.messages.prepend : '') + (Array.isArray(content) ? content.join('\n') : content);
 }
 
 export default getContent;
