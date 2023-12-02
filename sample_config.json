@@ -11,6 +11,7 @@
 	},
 	"messages": {
 		"commands": false,
+		"prepend": "",
 		"embeds": true,
 		"author": true,
 		"capture": {
