@@ -104,13 +104,28 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.Channel;
 
-	Webhook.send(listener.webhook, {
-		username: listener.name,
-		content: [
-			replyAuthor && `> \`${replyAuthor.title}:\` ${getContent(reply)}`,
-			`${config.messages.author ? codeblock(chat.title + ':') : ''} ${getContent(message)}`.trim()
-		].filter(Boolean).join('\n')
-	}, files);
+	const content = getContent(message);
+	const replyContent = getContent(reply);
+
+	if (Array.isArray(content)) {
+		for (const chunk of content) {
+			Webhook.send(listener.webhook, {
+				username: listener.name,
+				content: [
+					replyAuthor && `> \`${replyAuthor.title}:\` ${Array.isArray(replyContent) ? replyContent.join('\n') : replyContent}`,
+					`${config.messages.author ? codeblock(chat.title + ':') : ''} ${chunk}`.trim()
+				].filter(Boolean).join('\n')
+			}, files);
+		}
+	} else {
+		Webhook.send(listener.webhook, {
+			username: listener.name,
+			content: [
+				replyAuthor && `> \`${replyAuthor.title}:\` ${Array.isArray(replyContent) ? replyContent.join('\n') : replyContent}`,
+				`${config.messages.author ? codeblock(chat.title + ':') : ''} ${content}`.trim()
+			].filter(Boolean).join('\n')
+		}, files);
+	}
 };
 
 async function onGroupMessage({ message, author, chat, listener }: HandlerArguments) {
@@ -123,13 +138,25 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
+	const content = getContent(message);
 
-
-	Webhook.send(listener.webhook, {
-		username: listener.name,
-		content: [
-			replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply)}`,
-			`${config.messages.author ? codeblock(author?.firstName ?? chat.title + ':') : ''} ${getContent(message)}`.trim()
-		].filter(Boolean).join('\n')
-	}, files);
+	if (Array.isArray(content)) {
+		for (const chunk of content) {
+			Webhook.send(listener.webhook, {
+				username: listener.name,
+				content: [
+					replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply)}`,
+					`${config.messages.author ? codeblock(author?.firstName ?? chat.title + ':') : ''} ${chunk}`.trim()
+				].filter(Boolean).join('\n')
+			}, files);
+		}
+	} else {
+		Webhook.send(listener.webhook, {
+			username: listener.name,
+			content: [
+				replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply)}`,
+				`${config.messages.author ? codeblock(author?.firstName ?? chat.title + ':') : ''} ${content}`.trim()
+			].filter(Boolean).join('\n')
+		}, files);
+	}
 };
