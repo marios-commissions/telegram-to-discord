@@ -1,7 +1,8 @@
+import type { Listener } from '@typings/structs';
 import { Api } from 'telegram';
 import config from '@config';
 
-function getContent(msg: Api.Message) {
+function getContent(msg: Api.Message, listener?: Listener) {
 	let content = msg.rawText;
 
 	const entities = (msg.entities?.filter(e => e.className === 'MessageEntityTextUrl') ?? []).sort((a, b) => b.offset - a.offset);
@@ -18,7 +19,7 @@ function getContent(msg: Api.Message) {
 
 		const start = content.slice(0, entity.offset);
 		const end = content.slice(entity.offset + entity.length);
-		const replacement = name === entity.url ? entity.url : `[${name}](${entity.url})`;
+		const replacement = name === entity.url ? entity.url : `[${name}](${(listener?.embeds ?? true) ? entity.url : `<${entity.url}>`})`;
 
 		offsets.push({
 			orig: entity.originalOffset ?? entity.offset,

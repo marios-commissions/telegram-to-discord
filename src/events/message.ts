@@ -89,8 +89,8 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 	Webhook.send(channel?.webhook ?? listener.webhook, {
 		username: listener.name,
 		content: [
-			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply)}`,
-			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message)}`
+			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener)}`,
+			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message, listener)}`
 		].filter(Boolean).join('\n')
 	}, files);
 }
@@ -106,8 +106,8 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 	Webhook.send(listener.webhook, {
 		username: listener.name,
 		content: [
-			replyAuthor && `> \`${replyAuthor.title}:\` ${getContent(reply)}`,
-			`${codeblock(chat.title + ':')} ${getContent(message)}`
+			replyAuthor && `> \`${replyAuthor.title}:\` ${getContent(reply, listener)}`,
+			`${codeblock(chat.title + ':')} ${getContent(message, listener)}`
 		].filter(Boolean).join('\n')
 	}, files);
 };
@@ -127,8 +127,8 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 	Webhook.send(listener.webhook, {
 		username: listener.name,
 		content: [
-			replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply)}`,
-			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message)}`
+			replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply, listener)}`,
+			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message, listener)}`
 		].filter(Boolean).join('\n')
 	}, files);
 };
