@@ -18,6 +18,7 @@ export interface Listener {
 	group: string;
 	forum: boolean;
 	webhook?: string;
+	embeds?: boolean;
 	channels?: {
 		name?: string;
 		main?: boolean;

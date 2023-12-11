@@ -99,14 +99,14 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 			name: chat.title
 		},
 		id: message.id.toString(),
-		text: getContent(message),
+		text: getContent(message, listener),
 		reply: {
 			author: {
 				id: replyAuthor?.id.toString(),
 				username: replyAuthor?.username
 			},
 			id: reply?.id.toString(),
-			text: reply ? getContent(reply) : null
+			text: reply ? getContent(reply, listener) : null
 		}
 	});
 }
@@ -132,14 +132,14 @@ async function onLinkedMessage({ message, chat, author, chatId, listener }: Hand
 			name: chat.title
 		},
 		id: message.id.toString(),
-		text: getContent(message),
+		text: getContent(message, listener),
 		reply: {
 			author: {
 				id: replyAuthor?.id.toString(),
 				username: replyAuthor?.username
 			},
 			id: reply?.id.toString(),
-			text: reply ? getContent(reply) : null
+			text: reply ? getContent(reply, listener) : null
 		}
 	});
 };
@@ -170,14 +170,14 @@ async function onGroupMessage({ message, author, chatId, chat, listener }: Handl
 			name: chat.title
 		},
 		id: message.id.toString(),
-		text: getContent(message),
+		text: getContent(message, listener),
 		reply: {
 			author: {
 				id: replyAuthor?.id.toString(),
 				username: replyAuthor?.username
 			},
 			id: reply?.id.toString(),
-			text: reply ? getContent(reply) : null
+			text: reply ? getContent(reply, listener) : null
 		}
 	});
 };
