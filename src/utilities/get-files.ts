@@ -18,7 +18,7 @@ async function getFiles(message: Api.Message) {
 	const document = message.media as Api.MessageMediaDocument;
 	const photo = media?.photo;
 
-	if (message.document?.fileReference || media || photo) {
+	if (message.document?.fileReference || photo) {
 		const payload = photo ?? document?.document ?? message.document as any;
 		if (!payload) return files;
 
