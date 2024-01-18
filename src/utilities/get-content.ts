@@ -1,5 +1,5 @@
 import { Api } from 'telegram';
-import config from '@config';
+import config from '~/config';
 
 function getContent(msg: Api.Message) {
 	let content: string | string[] = msg.rawText;

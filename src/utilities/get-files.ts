@@ -1,9 +1,9 @@
-import Client from '@structures/client';
+import Client from '~/structures/client';
 import mimeTypes from 'mime-types';
-import { Paths } from '@constants';
-import uuid from '@utilities/uuid';
+import { Paths } from '~/constants';
+import uuid from '~/utilities/uuid';
 import { Api } from 'telegram';
-import config from '@config';
+import config from '~/config';
 import path from 'path';
 import fs from 'fs';
 
@@ -15,34 +15,29 @@ async function getFiles(message: Api.Message) {
 	}
 
 	const media = message.media as Api.MessageMediaPhoto;
-	const document = message.media as Api.MessageMediaDocument;
-	const photo = media?.photo;
+	const document = message.document;
 
-	if (message.document?.fileReference || photo) {
-		const payload = photo ?? document?.document ?? message.document as any;
+	if (document || media) {
+		const payload = (document || media) as any;
 		if (!payload) return files;
 
-		Client._log.info(`Received media payload with mime type ${payload.mimeType}`);
-		if (config.messages.attachments.ignore.includes(payload.mimeType)) {
+		Client._log.info(`Received media payload with mime type ${payload.className === 'MessageMediaPhoto' ? 'image/png' : payload.mimeType} `);
+		if (config.messages.attachments.ignore.includes(payload.className === 'MessageMediaPhoto' ? 'image/png' : payload.mimeType)) {
 			return files;
 		}
 
-		const media = await message.downloadMedia() as Buffer;
-		const file = path.join(Paths.Files, uuid(30));
+		const buf = await message.downloadMedia() as Buffer;
+		const id = uuid(30);
+		const filePath = path.join(Paths.Files, id);
 
 		if (config.messages.attachments.save) {
-			fs.writeFileSync(file, media);
+			fs.writeFileSync(filePath, buf);
 		}
 
-		const attribute = payload.attributes?.find(a => a.fileName);
+		const attrib = payload.attributes?.find(a => a.fileName)?.fileName;
+		const file = id + '.' + (payload.mimeType ? mimeTypes.extension(payload.mimeType) : 'png');
 
-		const name = attribute?.fileName || [
-			path.basename(file),
-			'.',
-			mimeTypes.extension(payload.mimeType ?? 'image/png')
-		].join('');
-
-		files.push({ path: file, name, mimeType: payload.mimeType ?? 'image/png' });
+		files.push({ path: filePath, name: attrib ?? file, buffer: buf, mimeType: payload.mimeType || 'image/png' });
 	}
 
 	return files;

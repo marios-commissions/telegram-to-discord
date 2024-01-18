@@ -1,8 +1,8 @@
 import sourcemaps from 'source-map-support';
 sourcemaps.install();
 
-import { Client, Webhook } from '@structures/index';
-import config from '@config';
+import { Client, Webhook } from '~/structures/index';
+import config from '~/config';
 
 Client.initialize();
 

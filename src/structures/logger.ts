@@ -1,5 +1,5 @@
-import { colorize } from '@utilities';
-import config from '@config';
+import { colorize } from '~/utilities';
+import config from '~/config';
 
 export function log(...args: string[]): void {
 	return console.log('»', ...args);

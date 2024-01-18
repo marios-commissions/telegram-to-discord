@@ -1,10 +1,10 @@
-import type { Chat, Reply, Listener } from '@typings/structs';
+import type { Chat, Reply, Listener } from '~/typings/structs';
 import type { NewMessageEvent } from 'telegram/events';
-import { codeblock, getContent, getFiles } from '@utilities';
+import { codeblock, getContent, getFiles } from '~/utilities';
 import { NewMessage } from 'telegram/events';
-import { Client, Webhook } from '@structures/index';
+import { Client, Webhook } from '~/structures/index';
 import { Api } from 'telegram';
-import config from '@config';
+import config from '~/config';
 
 Client.addEventHandler(onMessage, new NewMessage());
 
