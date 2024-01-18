@@ -36,7 +36,7 @@ async function getFiles(message: Api.Message) {
 
 		const attribute = payload.attributes?.find(a => a.fileName);
 
-		const name = attribute?.fileName ?? [
+		const name = attribute?.fileName || [
 			path.basename(file),
 			'.',
 			mimeTypes.extension(payload.mimeType ?? 'image/png')

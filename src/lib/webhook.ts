@@ -36,6 +36,7 @@ class Webhook {
 				for (let i = 1; i < files.length + 1; i++) {
 					const file = files[i - 1];
 					const field = 'file' + i;
+					if (!file?.name) continue;
 
 					form.append(field, file.buffer, { filename: file.name });
 				}
