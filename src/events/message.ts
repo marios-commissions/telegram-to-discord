@@ -21,7 +21,6 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id}`);
 
-	console.log(getContent(message));
 	const listeners = config.listeners.filter(l => l.group == chatId.toString());
 	if (!listeners.length) return;
 
