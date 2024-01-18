@@ -39,28 +39,28 @@
 		},
 		"baseUrl": "src",
 		"paths": {
-			"@utilities": [
+			"~/utilities": [
 				"utilities/index.ts"
 			],
-			"@utilities/*": [
+			"~/utilities/*": [
 				"utilities/*"
 			],
-			"@config": [
+			"~/config": [
 				"../config.json"
 			],
-			"@constants": [
+			"~/constants": [
 				"constants.ts"
 			],
-			"@structures/*": [
+			"~/structures/*": [
 				"structures/*"
 			],
-			"@structures": [
+			"~/structures": [
 				"structures/index.ts"
 			],
-			"@typings/*": [
+			"~/typings/*": [
 				"../typings/*"
 			],
-			"@src/*": [
+			"~/src/*": [
 				"*"
 			]
 		}

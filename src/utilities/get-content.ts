@@ -1,6 +1,6 @@
-import type { Listener } from '@typings/structs';
+import type { Listener } from '~/typings/structs';
 import { Api } from 'telegram';
-import config from '@config';
+import config from '~/config';
 
 function getContent(msg: Api.Message, listener?: Listener) {
 	let content = msg.rawText;

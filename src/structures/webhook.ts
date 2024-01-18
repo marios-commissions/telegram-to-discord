@@ -1,6 +1,6 @@
 import { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
-import { splitMessage } from '@utilities';
-import Client from '@structures/client';
+import { splitMessage } from '~/utilities';
+import Client from '~/structures/client';
 import FormData from 'form-data';
 import { inspect } from 'util';
 
@@ -36,7 +36,6 @@ class Webhook {
 				for (let i = 1; i < files.length + 1; i++) {
 					const file = files[i - 1];
 					const field = 'file' + i;
-					if (!file?.name) continue;
 
 					form.append(field, file.buffer, { filename: file.name });
 				}
@@ -48,14 +47,6 @@ class Webhook {
 						(err);
 						throw err;
 					}
-
-					res.on('data', data => {
-						if (data) {
-							const res = JSON.parse(data);
-							Client.logger.debug('Webhook response:\n');
-							Client.logger.debug(res);
-						}
-					});
 
 					res.on('end', resolve);
 					res.on('error', reject);
