@@ -11,7 +11,6 @@ Client.addEventHandler(onMessage, new NewMessage());
 async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; }) {
 	if (!config.messages.commands && message.message.startsWith('/')) return;
 
-	console.log(chatId);
 	const author = await message.getSender() as Api.User;
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
 
