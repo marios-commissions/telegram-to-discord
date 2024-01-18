@@ -7,8 +7,7 @@ export const Paths = {
 
 export const ClientOptions: TelegramClientParams = {
 	autoReconnect: true,
-	useIPV6: false,
-	useWSS: true
+	connectionRetries: 5
 };
 
 export const SessionName = '.keepsecret';
