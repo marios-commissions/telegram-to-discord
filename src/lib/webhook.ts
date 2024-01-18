@@ -1,6 +1,6 @@
 import { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
-import { splitMessage } from '@utilities';
-import Client from '@lib/client';
+import { splitMessage } from '~/utilities';
+import Client from '~/lib/client';
 import FormData from 'form-data';
 import { inspect } from 'util';
 

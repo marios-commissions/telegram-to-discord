@@ -1,6 +1,6 @@
-import { ClientOptions, SessionName } from '@constants';
+import { ClientOptions, SessionName } from '~/constants';
 import { TelegramClient } from 'telegram';
-import config from '@config';
+import config from '~/config';
 import input from 'input';
 
 class Client extends TelegramClient {
@@ -23,7 +23,7 @@ class Client extends TelegramClient {
 
 		console.log('» Channels:\n' + groups.map(e => `${e.name} » ${e.id.toString()}`).join('\n'));
 
-		import('@src/events');
+		import('~/src/events');
 	}
 }
 

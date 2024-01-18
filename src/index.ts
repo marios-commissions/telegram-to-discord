@@ -3,8 +3,8 @@ sourcemaps.install();
 
 require('dotenv').config();
 
-import { Client } from '@lib';
-import config from '@config';
+import { Client } from '~/lib';
+import config from '~/config';
 
 Client.initialize();
 require('./lib/web');

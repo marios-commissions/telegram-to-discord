@@ -1,6 +1,6 @@
 import type { StoredMessage } from '@typings/structs';
 import EventEmitter from 'node:events';
-import { debounce } from '@utilities';
+import { debounce } from '~/utilities';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import fs from 'node:fs';

@@ -1,11 +1,11 @@
 import { AllowedMentionsTypes } from 'discord-api-types/v10';
-import { codeblock, getContent, getFiles } from '@utilities';
+import { getContent, getFiles } from '~/utilities';
 import { Listener } from '@typings/structs';
 import { Raw } from 'telegram/events';
-import { Client } from '@lib/index';
-import Webhook from '@lib/webhook';
+import { Client } from '~/lib/index';
+import Webhook from '~/lib/webhook';
 import { Api } from 'telegram';
-import config from '@config';
+import config from '~/config';
 
 Client.addEventHandler(onUpdatePinnedMessages, new Raw({ types: [Api.UpdatePinnedChannelMessages] }));
 

@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws';
-import Client from '@lib/client';
-import { Store } from '@lib';
+import Client from '~/lib/client';
+import { Store } from '~/lib';
 
 const ws = new WebSocketServer({ port: 8098 });
 
