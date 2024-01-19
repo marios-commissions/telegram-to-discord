@@ -1,7 +1,7 @@
-import Client from '~/structures/client';
-import mimeTypes from 'mime-types';
+import { Client } from '~/structures';
 import { Paths } from '~/constants';
 import uuid from '~/utilities/uuid';
+import mimeTypes from 'mime-types';
 import { Api } from 'telegram';
 import config from '~/config';
 import path from 'path';

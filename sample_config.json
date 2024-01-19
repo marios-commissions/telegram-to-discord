@@ -11,22 +11,15 @@
 	},
 	"messages": {
 		"commands": false,
-		"prepend": "",
-		"embeds": true,
+		"embeds": false,
 		"allowedEmbeds": [
 			"twitter.com",
-			"fixupx.com",
 			"fxtwitter.com",
 			"vxtwitter.com",
-			"x.com"
+			"fixupx.com",
+			"x.com",
+			"twitter.com"
 		],
-		"author": true,
-		"capture": {
-			"TITLE": "🔫 .+[\\s]",
-			"DETAILS": "FDV:.+[\\s]",
-			"ADDRESS": "(\\b0x[a-f0-9]{40}\\b)(?:\\n)"
-		},
-		"capture_format": "{{TITLE}}, {{DETAILS}}, {{ADDRESS}}",
 		"replacements": {
 			"://twitter.com": "://fxtwitter.com",
 			"://x.com": "://fxtwitter.com"
@@ -66,6 +59,7 @@
 			"group": "1234",
 			"forum": false,
 			"pins": true,
+			"embeds": false,
 			"webhook": "https://discord.com/api/webhooks/1234/1234",
 			"users": [
 				"username_here"
