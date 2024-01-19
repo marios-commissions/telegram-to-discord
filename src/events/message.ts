@@ -86,8 +86,8 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 	const hasReply = reply?.id !== topic?.id;
 	const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
 
-	const content = getContent(message);
-	const replyContent = reply && getContent(reply);
+	const content = getContent(message, listener, channel);
+	const replyContent = reply && getContent(reply, listener, channel);
 
 
 	if (Array.isArray(content)) {
@@ -119,8 +119,8 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.Channel;
 
-	const content = getContent(message);
-	const replyContent = reply && getContent(reply);
+	const content = getContent(message, listener);
+	const replyContent = reply && getContent(reply, listener);
 
 	if (Array.isArray(content)) {
 		for (const chunk of content) {
@@ -154,8 +154,8 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
 
-	const content = getContent(message);
-	const replyContent = reply && getContent(reply);
+	const content = getContent(message, listener);
+	const replyContent = reply && getContent(reply, listener);
 
 
 	if (Array.isArray(content)) {

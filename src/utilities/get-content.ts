@@ -1,11 +1,14 @@
+import { Listener } from '~/typings/structs';
 import { Api } from 'telegram';
 import config from '~/config';
 
-function getContent(msg: Api.Message) {
+function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 	let content: string | string[] = msg.rawText;
 
 	const entities = (msg.entities?.filter(e => e.className === 'MessageEntityTextUrl') ?? []).sort((a, b) => b.offset - a.offset);
 	const offsets = [];
+
+	const areLinksAllowed = (config.messages?.embeds ?? true) || (channel?.embeds ?? listener.embeds);
 
 	for (const entity of entities as (Api.TypeMessageEntity & { originalOffset: number; url: string; })[]) {
 		const premades = offsets.filter(o => o.orig < entity.offset);
@@ -18,7 +21,9 @@ function getContent(msg: Api.Message) {
 
 		const start = content.slice(0, entity.offset);
 		const end = content.slice(entity.offset + entity.length);
-		const replacement = name === entity.url ? entity.url : `[${name}](${!(config.messages.embeds ?? true) ? '<' + entity.url + '>' : entity.url})`;
+
+		const areLinksAllowedForCurrentEntity = (config.messages?.allowedEmbeds ?? []).some(allowed => ~entity.url.indexOf(allowed));
+		const replacement = name === entity.url ? entity.url : `[${name}](${(areLinksAllowed || areLinksAllowedForCurrentEntity) ? entity.url : ('<' + entity.url + '>')})`;
 
 		offsets.push({
 			orig: entity.originalOffset ?? entity.offset,
@@ -54,6 +59,37 @@ function getContent(msg: Api.Message) {
 			};
 
 			content.push(out);
+		}
+	}
+
+	if (!areLinksAllowed) {
+		if (Array.isArray(content)) {
+			for (const chunk of content) {
+				const idx = content.indexOf(chunk);
+
+				const links = chunk.match(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gmi);
+				if (!links?.length) return content;
+
+				for (const link of links) {
+					const areLinksAllowedForCurrentEntity = (config.messages?.allowedEmbeds ?? []).some(allowed => ~link.indexOf(allowed));
+
+					if (!areLinksAllowedForCurrentEntity) {
+						content[idx] = chunk.replaceAll(link, `<${link}>`);
+					}
+				}
+
+			}
+		} else {
+			const links = content.match(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gmi);
+			if (!links?.length) return content;
+
+			for (const link of links) {
+				const areLinksAllowedForCurrentEntity = (config.messages?.allowedEmbeds ?? []).some(allowed => ~link.indexOf(allowed));
+
+				if (!areLinksAllowedForCurrentEntity) {
+					content = content.replaceAll(link, `<${link}>`);
+				}
+			}
 		}
 	}
 

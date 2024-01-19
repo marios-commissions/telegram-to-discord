@@ -13,6 +13,13 @@
 		"commands": false,
 		"prepend": "",
 		"embeds": true,
+		"allowedEmbeds": [
+			"twitter.com",
+			"fixupx.com",
+			"fxtwitter.com",
+			"vxtwitter.com",
+			"x.com"
+		],
 		"author": true,
 		"capture": {
 			"TITLE": "🔫 .+[\\s]",
@@ -45,7 +52,8 @@
 			"channels": [
 				{
 					"main": true,
-					"webhook": "https://discord.com/api/webhooks/1234/1234"
+					"webhook": "https://discord.com/api/webhooks/1234/1234",
+					"embeds": true
 				},
 				{
 					"name": "Topic Name",
