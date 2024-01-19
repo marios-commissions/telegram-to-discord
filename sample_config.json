@@ -14,10 +14,11 @@
 		"embeds": false,
 		"allowedEmbeds": [
 			"twitter.com",
-			"fixupx.com",
 			"fxtwitter.com",
 			"vxtwitter.com",
-			"x.com"
+			"fixupx.com",
+			"x.com",
+			"twitter.com"
 		],
 		"replacements": {
 			"://twitter.com": "://fxtwitter.com",
