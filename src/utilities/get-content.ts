@@ -8,7 +8,7 @@ function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 	const entities = (msg.entities?.filter(e => e.className === 'MessageEntityTextUrl') ?? []).sort((a, b) => b.offset - a.offset);
 	const offsets = [];
 
-	const areLinksAllowed = (config.messages?.embeds ?? true) || (channel?.embeds ?? listener.embeds);
+	const areLinksAllowed = config.messages?.embeds || (channel?.embeds ?? listener.embeds);
 
 	for (const entity of entities as (Api.TypeMessageEntity & { originalOffset: number; url: string; })[]) {
 		const premades = offsets.filter(o => o.orig < entity.offset);
