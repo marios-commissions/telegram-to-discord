@@ -11,6 +11,14 @@
 	},
 	"messages": {
 		"commands": false,
+		"embeds": false,
+		"allowedEmbeds": [
+			"twitter.com",
+			"fixupx.com",
+			"fxtwitter.com",
+			"vxtwitter.com",
+			"x.com"
+		],
 		"replacements": {
 			"://twitter.com": "://fxtwitter.com",
 			"://x.com": "://fxtwitter.com"
@@ -36,7 +44,8 @@
 			"channels": [
 				{
 					"main": true,
-					"webhook": "https://discord.com/api/webhooks/1234/1234"
+					"webhook": "https://discord.com/api/webhooks/1234/1234",
+					"embeds": true
 				},
 				{
 					"name": "Topic Name",

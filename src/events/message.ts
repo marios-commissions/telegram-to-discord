@@ -98,14 +98,14 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 			name: chat.title
 		},
 		id: message.id.toString(),
-		text: getContent(message, listener),
+		text: getContent(message, listener, channel),
 		reply: {
 			author: {
 				id: replyAuthor?.id.toString(),
 				username: replyAuthor?.username
 			},
 			id: reply?.id.toString(),
-			text: reply ? getContent(reply, listener) : null
+			text: reply ? getContent(reply, listener, channel) : null
 		}
 	});
 }

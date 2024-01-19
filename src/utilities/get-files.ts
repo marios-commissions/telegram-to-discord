@@ -14,8 +14,12 @@ async function getFiles(message: Api.Message) {
 		fs.mkdirSync(Paths.Files);
 	}
 
-	const media = message.media as Api.MessageMediaPhoto;
+	const media = message.media;
 	const document = message.document;
+
+	if (media?.className === 'MessageMediaWebPage') {
+		return files;
+	}
 
 	if (document || media) {
 		const payload = (document || media) as any;
@@ -27,6 +31,8 @@ async function getFiles(message: Api.Message) {
 		}
 
 		const buf = await message.downloadMedia() as Buffer;
+		if (!buf?.length) return files;
+
 		const id = uuid(30);
 		const filePath = path.join(Paths.Files, id);
 
