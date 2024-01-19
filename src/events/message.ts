@@ -88,8 +88,8 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 	Webhook.send(channel?.webhook ?? listener.webhook, {
 		username: listener.name,
 		content: [
-			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener)}`,
-			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message, listener)}`
+			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener, channel)}`,
+			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message, listener, channel)}`
 		].filter(Boolean).join('\n')
 	}, files);
 }
