@@ -67,7 +67,7 @@ function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 			for (const chunk of content) {
 				const idx = content.indexOf(chunk);
 
-				const links = chunk.match(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gmi);
+				const links = chunk?.match(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gmi);
 				if (!links?.length) return content;
 
 				for (const link of links) {
@@ -80,7 +80,7 @@ function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 
 			}
 		} else {
-			const links = content.match(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gmi);
+			const links = content?.match(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gmi);
 			if (!links?.length) return content;
 
 			for (const link of links) {
