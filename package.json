@@ -6,7 +6,7 @@
 	"author": "Mario <mariovparaschiv@gmail.com> (github.com/localip)",
 	"license": "Unlicensed",
 	"scripts": {
-		"build": "swc src -d dist -D --delete-dir-on-start",
+		"build": "swc src -d dist -D --delete-dir-on-start --strip-leading-paths",
 		"start": "node dist/index.js"
 	},
 	"dependencies": {
