@@ -19,12 +19,15 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 		(author?.username && ~config.messages.blacklist.indexOf(author.username))
 	) return;
 
-	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id}`);
+	const isForum = chat.forum;
+	const isLinked = chat.hasLink || chat.broadcast;
+
+	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id} - Channel Type: ${isForum ? 'Forum' : isLinked ? 'Linked' : 'Group/Private'}`);
 
 	const listeners = config.listeners.filter(l => l.group == chatId.toString());
 	if (!listeners.length) return;
 
-	if (chat.forum) {
+	if (isForum) {
 		const reply = await message.getReplyMessage() as Reply;
 
 		for (const listener of listeners.filter(l => l.forum) as Listener[]) {
@@ -32,7 +35,7 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 			onForumMessage({ message, chat, chatId, author, reply, listener });
 		}
-	} else if (chat.hasLink || chat.broadcast) {
+	} else if (isLinked) {
 		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true) as Listener[]) {
 			if (listener.group != chatId.toString()) continue;
 
