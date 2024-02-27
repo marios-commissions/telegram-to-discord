@@ -92,7 +92,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 		username: listener.name,
 		content: [
 			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener, channel)}`,
-			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message, listener, channel)}`
+			`${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`
 		].filter(Boolean).join('\n')
 	}, files);
 }
@@ -103,13 +103,14 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 	if (!message.rawText && !files.length) return;
 
 	const reply = await message.getReplyMessage() as Reply;
-	const replyAuthor = await reply?.getSender() as Api.Channel;
+	const replyAuthor = await reply?.getSender() as Api.User;
+	const author = await message.getSender() as Api.User;
 
 	Webhook.send(listener.webhook, {
 		username: listener.name,
 		content: [
-			replyAuthor && `> \`${replyAuthor.title}:\` ${getContent(reply, listener)}`,
-			`${codeblock(chat.title + ':')} ${getContent(message, listener)}`
+			replyAuthor && `> \`${(replyAuthor.firstName ?? replyAuthor.title) + ':'}\` ${getContent(reply, listener)}`,
+			`${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`
 		].filter(Boolean).join('\n')
 	}, files);
 };
