@@ -5,6 +5,7 @@ import { NewMessage } from 'telegram/events';
 import { Client, Webhook } from '~/structures';
 import { Api } from 'telegram';
 import config from '~/config';
+import { type APIEmbed } from 'discord-api-types/v10';
 
 Client.addEventHandler(onMessage, new NewMessage());
 
@@ -88,13 +89,28 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 	const hasReply = reply?.id !== topic?.id;
 	const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
 
-	Webhook.send(channel?.webhook ?? listener.webhook, {
-		username: listener.name,
-		content: [
-			replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener, channel)}`,
-			`${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`
-		].filter(Boolean).join('\n')
-	}, files);
+	const content = [
+		replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener, channel)}`,
+		`${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`
+	].filter(Boolean).join('\n');
+
+	const embed: APIEmbed = {
+		color: 16711680,
+		description: content
+	};
+
+	if (listener.embedded) {
+		Webhook.send(listener.webhook, {
+			username: listener.name,
+			embeds: [embed]
+		}, files);
+
+	} else {
+		Webhook.send(listener.webhook, {
+			username: listener.name,
+			content
+		}, files);
+	}
 }
 
 
@@ -106,13 +122,28 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 	const replyAuthor = await reply?.getSender() as Api.User;
 	const author = await message.getSender() as Api.User;
 
-	Webhook.send(listener.webhook, {
-		username: listener.name,
-		content: [
-			replyAuthor && `> \`${(replyAuthor.firstName ?? replyAuthor.title) + ':'}\` ${getContent(reply, listener)}`,
-			`${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`
-		].filter(Boolean).join('\n')
-	}, files);
+	const content = [
+		replyAuthor && `> \`${(replyAuthor.firstName ?? replyAuthor.title) + ':'}\` ${getContent(reply, listener)}`,
+		`${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`
+	].filter(Boolean).join('\n');
+
+	const embed: APIEmbed = {
+		color: 16711680,
+		description: content
+	};
+
+	if (listener.embedded) {
+		Webhook.send(listener.webhook, {
+			username: listener.name,
+			embeds: [embed]
+		}, files);
+
+	} else {
+		Webhook.send(listener.webhook, {
+			username: listener.name,
+			content
+		}, files);
+	}
 };
 
 async function onGroupMessage({ message, author, chat, listener }: HandlerArguments) {
@@ -126,12 +157,26 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
 
+	const content = [
+		replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply, listener)}`,
+		`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message, listener)}`
+	].filter(Boolean).join('\n');
 
-	Webhook.send(listener.webhook, {
-		username: listener.name,
-		content: [
-			replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply, listener)}`,
-			`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message, listener)}`
-		].filter(Boolean).join('\n')
-	}, files);
+	const embed: APIEmbed = {
+		color: 16711680,
+		description: content
+	};
+
+	if (listener.embedded) {
+		Webhook.send(listener.webhook, {
+			username: listener.name,
+			embeds: [embed]
+		}, files);
+
+	} else {
+		Webhook.send(listener.webhook, {
+			username: listener.name,
+			content
+		}, files);
+	}
 };

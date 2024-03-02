@@ -19,6 +19,7 @@ export interface Listener {
 	forum: boolean;
 	webhook?: string;
 	embeds?: boolean;
+	embedded?: boolean;
 	channels?: {
 		name?: string;
 		main?: boolean;
