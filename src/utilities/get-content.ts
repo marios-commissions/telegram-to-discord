@@ -22,7 +22,7 @@ function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 		const start = content.slice(0, entity.offset);
 		const end = content.slice(entity.offset + entity.length);
 
-		const areLinksAllowedForCurrentEntity = (listener.allowedEmbeds || config.messages?.allowedEmbeds ?? []).some(allowed => ~entity.url.indexOf(allowed));
+		const areLinksAllowedForCurrentEntity = ((listener.allowedEmbeds || config.messages?.allowedEmbeds) ?? []).some(allowed => ~entity.url.indexOf(allowed));
 		const replacement = name === entity.url ? entity.url : `[${name}](${(areLinksAllowed || areLinksAllowedForCurrentEntity) ? entity.url : ('<' + entity.url + '>')})`;
 
 		offsets.push({
