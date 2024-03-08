@@ -69,12 +69,12 @@
 			"name": "Premium Tier (Forum Group, Catch-All, No user filter)",
 			"group": "1234",
 			"forum": true,
+			"allowedEmbeds": [
+				"example-specific-domain.com"
+			],
 			"channels": [
 				{
 					"main": true,
-					"allowedEmbeds": [
-						"example-specific-domain.com"
-					],
 					"webhook": "https://discord.com/api/webhooks/1234/1234"
 				}
 			]
