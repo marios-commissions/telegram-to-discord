@@ -72,6 +72,9 @@
 			"channels": [
 				{
 					"main": true,
+					"allowedEmbeds": [
+						"example-specific-domain.com"
+					],
 					"webhook": "https://discord.com/api/webhooks/1234/1234"
 				}
 			]

@@ -137,7 +137,6 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 			username: listener.name,
 			embeds: [embed]
 		}, files);
-
 	} else {
 		Webhook.send(listener.webhook, {
 			username: listener.name,
