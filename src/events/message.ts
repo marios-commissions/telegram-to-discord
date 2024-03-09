@@ -15,6 +15,8 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 	const author = await message.getSender() as Api.User;
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
 
+	if (!chat) return;
+
 	if (
 		(!chat.hasLink && !chat.broadcast && !author?.username) ||
 		(author?.username && ~config.messages.blacklist.indexOf(author.username))
@@ -122,6 +124,7 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 	const author = await message.getSender() as Api.User;
 
 	const content = [
+		// @ts-ignore
 		replyAuthor && `> \`${(replyAuthor.firstName ?? replyAuthor.title) + ':'}\` ${getContent(reply, listener)}`,
 		`${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`
 	].filter(Boolean).join('\n');

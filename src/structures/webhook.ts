@@ -13,14 +13,14 @@ interface File {
 
 class Webhook {
 	async send(url: string, message: RESTPostAPIWebhookWithTokenJSONBody, files?: File[]) {
-		if (message.content.length > 2000) {
+		if (message.content?.length > 2000) {
 			const chunks = splitMessage(message.content);
 
 			for (const chunk of chunks) {
 				await this.send(url, { ...message, content: chunk });
 			}
 
-			if (files.length) {
+			if (files?.length) {
 				await this.send(url, { ...message, content: '' }, files);
 			}
 
