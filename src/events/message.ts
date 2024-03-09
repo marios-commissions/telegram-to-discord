@@ -100,13 +100,12 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 	};
 
 	if (listener.embedded) {
-		Webhook.send(listener.webhook, {
+		Webhook.send(channel?.webhook ?? listener.webhook, {
 			username: listener.name,
 			embeds: [embed]
 		}, files);
-
 	} else {
-		Webhook.send(listener.webhook, {
+		Webhook.send(channel?.webhook ?? listener.webhook, {
 			username: listener.name,
 			content
 		}, files);
