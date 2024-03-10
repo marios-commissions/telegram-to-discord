@@ -101,7 +101,9 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 		description: content
 	};
 
-	if (listener.embedded) {
+	const shouldEmbed = (typeof listener.embedded === 'boolean' && listener.embedded) || (typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username));
+
+	if (shouldEmbed) {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
 			username: listener.name,
 			embeds: [embed]
@@ -134,7 +136,9 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 		description: content
 	};
 
-	if (listener.embedded) {
+	const shouldEmbed = (typeof listener.embedded === 'boolean' && listener.embedded) || (typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username));
+
+	if (shouldEmbed) {
 		Webhook.send(listener.webhook, {
 			username: listener.name,
 			embeds: [embed]
@@ -168,7 +172,9 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 		description: content
 	};
 
-	if (listener.embedded) {
+	const shouldEmbed = (typeof listener.embedded === 'boolean' && listener.embedded) || (typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username));
+
+	if (shouldEmbed) {
 		Webhook.send(listener.webhook, {
 			username: listener.name,
 			embeds: [embed]
