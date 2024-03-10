@@ -130,7 +130,7 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 	].filter(Boolean).join('\n');
 
 	const embed: APIEmbed = {
-		color: 16711680,
+		color: listener.embedColor ?? 16711680,
 		description: content
 	};
 
