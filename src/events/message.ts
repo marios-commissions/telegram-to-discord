@@ -95,9 +95,9 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username);
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor.username);
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor?.username);
 
-	const replyText = replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
+	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
 	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`;
 
 	const content = [!shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
@@ -138,9 +138,9 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username);
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor.username);
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor?.username);
 
-	const replyText = replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
+	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
 	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`;
 
 	const content = [!shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
@@ -183,9 +183,9 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username);
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor.username);
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor?.username);
 
-	const replyText = replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
+	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
 	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`;
 
 	const content = [!shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
