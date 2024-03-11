@@ -16,7 +16,8 @@ export interface Listener {
 	users?: string[];
 	name: string;
 	group: string;
-	forum: boolean;
+	forum?: boolean;
+	stickers?: boolean;
 	webhook?: string;
 	embeds?: boolean;
 	embedded?: boolean;
