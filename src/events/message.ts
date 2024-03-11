@@ -62,6 +62,8 @@ interface HandlerArguments {
 }
 
 async function onForumMessage({ message, author, chat, chatId, reply, listener }: HandlerArguments & { reply: Reply; }) {
+	if (!listener.stickers && message.sticker) return;
+
 	const isTopic = reply?.replyTo?.forumTopic ?? false;
 	const topicId = reply?.replyTo?.replyToTopId ?? reply?.replyTo?.replyToMsgId;
 
@@ -91,25 +93,33 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 	const hasReply = reply?.id !== topic?.id;
 	const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
 
-	const content = [
-		replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener, channel)}`,
-		`${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`
-	].filter(Boolean).join('\n');
+	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
+	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username);
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor.username);
+
+	const replyText = replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
+	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`;
+
+	const content = [!shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
 
 	const embed: APIEmbed = {
-		color: 16711680,
+		color: listener.embedColor ?? 16711680,
 		description: content
 	};
 
-	const shouldEmbed = (typeof listener.embedded === 'boolean' && listener.embedded) || (typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username));
+	const replyEmbed: APIEmbed = {
+		color: listener.embedColor ?? 16711680,
+		description: replyText
+	};
 
-	if (shouldEmbed) {
-		Webhook.send(channel?.webhook ?? listener.webhook, {
+	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
+		Webhook.send(listener.webhook, {
 			username: listener.name,
-			embeds: [embed]
+			content: shouldEmbedReply ? content : '',
+			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
-		Webhook.send(channel?.webhook ?? listener.webhook, {
+		Webhook.send(listener.webhook, {
 			username: listener.name,
 			content
 		}, files);
@@ -120,28 +130,36 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 	const files = await getFiles(message);
 	if (!message.rawText && !files.length) return;
+	if (!listener.stickers && message.sticker) return;
 
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
 	const author = await message.getSender() as Api.User;
 
-	const content = [
-		// @ts-ignore
-		replyAuthor && `> \`${(replyAuthor.firstName ?? replyAuthor.title) + ':'}\` ${getContent(reply, listener)}`,
-		`${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`
-	].filter(Boolean).join('\n');
+	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
+	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username);
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor.username);
+
+	const replyText = replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
+	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`;
+
+	const content = [!shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
 
 	const embed: APIEmbed = {
 		color: listener.embedColor ?? 16711680,
 		description: content
 	};
 
-	const shouldEmbed = (typeof listener.embedded === 'boolean' && listener.embedded) || (typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username));
+	const replyEmbed: APIEmbed = {
+		color: listener.embedColor ?? 16711680,
+		description: replyText
+	};
 
-	if (shouldEmbed) {
+	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(listener.webhook, {
 			username: listener.name,
-			embeds: [embed]
+			content: shouldEmbedReply ? content : '',
+			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(listener.webhook, {
@@ -154,6 +172,7 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 async function onGroupMessage({ message, author, chat, listener }: HandlerArguments) {
 	const user = listener.users?.find(user => user === author.username);
 	if (listener.users?.length && !user) return;
+	if (!listener.stickers && message.sticker) return;
 
 	const files = await getFiles(message);
 
@@ -162,24 +181,31 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
 
-	const content = [
-		replyAuthor && `> \`${replyAuthor.firstName}:\` ${getContent(reply, listener)}`,
-		`${codeblock(author?.firstName ?? chat.title + ':')} ${getContent(message, listener)}`
-	].filter(Boolean).join('\n');
+	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
+	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username);
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor.username);
+
+	const replyText = replyAuthor && `> \`${replyAuthor.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
+	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`;
+
+	const content = [!shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
 
 	const embed: APIEmbed = {
-		color: 16711680,
+		color: listener.embedColor ?? 16711680,
 		description: content
 	};
 
-	const shouldEmbed = (typeof listener.embedded === 'boolean' && listener.embedded) || (typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username));
+	const replyEmbed: APIEmbed = {
+		color: listener.embedColor ?? 16711680,
+		description: replyText
+	};
 
-	if (shouldEmbed) {
+	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(listener.webhook, {
 			username: listener.name,
-			embeds: [embed]
+			content: shouldEmbedReply ? content : '',
+			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
-
 	} else {
 		Webhook.send(listener.webhook, {
 			username: listener.name,
