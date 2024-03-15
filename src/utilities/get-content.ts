@@ -1,4 +1,5 @@
 import type { Listener } from '~/typings/structs';
+import { escape } from '~/utilities';
 import { Api } from 'telegram';
 import config from '~/config';
 
@@ -41,14 +42,24 @@ function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 
 	if (!areLinksAllowed) {
 		const links = content?.match(/^(?!<)https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)/gmi);
-		if (!links?.length) return content;
 
-		for (const link of links) {
-			const areLinksAllowedForCurrentEntity = (config.messages?.allowedEmbeds ?? []).some(allowed => ~link.indexOf(allowed));
+		if (links?.length) {
+			for (const link of links) {
+				const areLinksAllowedForCurrentEntity = (config.messages?.allowedEmbeds ?? []).some(allowed => ~link.indexOf(allowed));
 
-			if (!areLinksAllowedForCurrentEntity) {
-				content = content.replaceAll(link, `<${link}>`);
+				if (!areLinksAllowedForCurrentEntity) {
+					content = content.replaceAll(link, `<${link}>`);
+				}
 			}
+		}
+	}
+
+	if (listener.remove?.length) {
+		for (const removal of listener.remove) {
+			const escaped = escape(removal).replaceAll('\\*', '([^\\s]+)');
+			const regex = new RegExp(escaped, 'gmi');
+
+			content = content.replaceAll(regex, '');
 		}
 	}
 

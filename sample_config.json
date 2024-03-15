@@ -87,6 +87,11 @@
 			"embedded": [
 				"Rose"
 			],
+			"remove": [
+				"*twitter.com/*/followers",
+				"⛓ Social links:",
+				"*t.me/*"
+			],
 			"embedColor": 3120031,
 			"webhook": "https://discord.com/api/webhooks/1234/1234"
 		}
