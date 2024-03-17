@@ -114,12 +114,14 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
+			...(listener.extraWebhookParameters ?? {}),
 			username: listener.name,
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
+			...(listener.extraWebhookParameters ?? {}),
 			username: listener.name,
 			content
 		}, files);
@@ -157,12 +159,14 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(listener.webhook, {
+			...(listener.extraWebhookParameters ?? {}),
 			username: listener.name,
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(listener.webhook, {
+			...(listener.extraWebhookParameters ?? {}),
 			username: listener.name,
 			content
 		}, files);
@@ -202,12 +206,14 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(listener.webhook, {
+			...(listener.extraWebhookParameters ?? {}),
 			username: listener.name,
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(listener.webhook, {
+			...(listener.extraWebhookParameters ?? {}),
 			username: listener.name,
 			content
 		}, files);

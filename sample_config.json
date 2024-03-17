@@ -87,6 +87,35 @@
 			"embedded": [
 				"Rose"
 			],
+			"extraWebhookParameters": {
+				"components": [
+					{
+						"type": 1,
+						"components": [
+							{
+								"style": 2,
+								"custom_id": "archive_button",
+								"disabled": false,
+								"emoji": {
+									"id": null,
+									"name": "👍"
+								},
+								"type": 2
+							},
+							{
+								"style": 2,
+								"custom_id": "delete_button",
+								"disabled": false,
+								"emoji": {
+									"id": null,
+									"name": "🗑️"
+								},
+								"type": 2
+							}
+						]
+					}
+				]
+			},
 			"remove": [
 				"*twitter.com/*/followers",
 				"⛓ Social links:",

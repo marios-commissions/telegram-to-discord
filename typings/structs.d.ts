@@ -24,6 +24,7 @@ export interface Listener {
 	embeds?: boolean;
 	embedded?: boolean;
 	embedColor?: number;
+	extraWebhookParameters?: any[];
 	channels?: {
 		name?: string;
 		main?: boolean;

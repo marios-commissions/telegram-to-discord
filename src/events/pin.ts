@@ -20,6 +20,7 @@ async function onUpdatePinnedMessages(payload) {
 
 	for (const listener of listeners as Listener[]) {
 		await Webhook.send(listener.webhook, {
+			...(listener.extraWebhookParameters ?? {}),
 			username: listener.name,
 			content: `@everyone Message pinned.`,
 			allowed_mentions: { parse: [AllowedMentionsTypes.Everyone] }
@@ -29,6 +30,7 @@ async function onUpdatePinnedMessages(payload) {
 			const content = getContent(message);
 
 			await Webhook.send(listener.webhook, {
+				...(listener.extraWebhookParameters ?? {}),
 				username: listener.name,
 				content
 			}, await getFiles(message));
