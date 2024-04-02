@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "Forward telegram group messages to Discord using webhooks. Supports attachments & allows for a wide configuration of filters for groups.",
 	"main": "dist/index.js",
-	"author": "eternal (eternal.git@gmail.com)",
+	"author": "Mario <me@marioparaschiv.com> (github.com/marioparaschiv)",
 	"license": "Unlicensed",
 	"scripts": {
 		"build": "swc src -d dist -D --delete-dir-on-start",
