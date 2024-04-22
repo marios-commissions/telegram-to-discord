@@ -15,12 +15,12 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 	const author = await message.getSender() as Api.User;
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
 
-	if (!chat) return;
+	if (!chat || !author) return;
 
-	if (
-		(!chat.hasLink && !chat.broadcast && !author?.username) ||
-		(author?.username && ~config.messages.blacklist.indexOf(author.username))
-	) return;
+	if (author.username && config.messages.blacklist.includes(author.username)) {
+		Client._log.info('Preventing forward of blacklisted user: ' + author.username);
+		return;
+	}
 
 	const isForum = chat.forum;
 	const isLinked = chat.hasLink || chat.broadcast;
