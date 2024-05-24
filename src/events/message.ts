@@ -27,7 +27,7 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id} - Channel Type: ${isForum ? 'Forum' : isLinked ? 'Linked' : 'Group/Private'}`);
 
-	const listeners = config.listeners.filter(l => l.group == chatId.toString() || l.users.includes(author?.id.toString()));
+	const listeners = config.listeners.filter(l => l.group == chatId.toString() || l.users?.includes(author?.id.toString()));
 	if (!listeners.length) return;
 
 	if (isForum) {
