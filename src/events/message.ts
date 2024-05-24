@@ -27,27 +27,21 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id} - Channel Type: ${isForum ? 'Forum' : isLinked ? 'Linked' : 'Group/Private'}`);
 
-	const listeners = config.listeners.filter(l => l.group == chatId.toString());
+	const listeners = config.listeners.filter(l => l.group == chatId.toString() || l.users.includes(author?.id.toString()));
 	if (!listeners.length) return;
 
 	if (isForum) {
 		const reply = await message.getReplyMessage() as Reply;
 
 		for (const listener of listeners.filter(l => l.forum) as Listener[]) {
-			if (listener.group != chatId.toString()) continue;
-
 			onForumMessage({ message, chat, chatId, author, reply, listener });
 		}
 	} else if (isLinked) {
 		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true) as Listener[]) {
-			if (listener.group != chatId.toString()) continue;
-
 			onLinkedMessage({ message, chat, chatId, author, listener });
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
-			if (listener.group != chatId.toString()) continue;
-
 			onGroupMessage({ message, chat, chatId, author, listener });
 		}
 	}
@@ -81,7 +75,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 		return false;
 	});
 
-	if (listener.channels?.length && !channel) return;
+	if (listener.channels?.length) return;
 
 	const user = listener.users?.find(user => user === author.username);
 	if (listener.users?.length && !user) return;
