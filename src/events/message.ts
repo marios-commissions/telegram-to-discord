@@ -35,14 +35,20 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 		const reply = await message.getReplyMessage() as Reply;
 
 		for (const listener of listeners.filter(l => l.forum) as Listener[]) {
+			if (!listener.stickers && message.sticker) return;
+
 			onForumMessage({ message, chat, chatId, author, reply, listener, usernames });
 		}
 	} else if (isLinked) {
 		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true) as Listener[]) {
+			if (!listener.stickers && message.sticker) return;
+
 			onLinkedMessage({ message, chat, chatId, author, listener, usernames });
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
+			if (!listener.stickers && message.sticker) return;
+
 			onGroupMessage({ message, chat, chatId, author, listener, usernames });
 		}
 	}
