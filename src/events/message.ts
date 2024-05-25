@@ -17,8 +17,10 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	if (!chat || !author) return;
 
-	if (author.username && config.messages.blacklist.includes(author.username)) {
-		Client._log.info('Preventing forward of blacklisted user: ' + author.username);
+	const usernames = [...(author.usernames?.map(u => u.username) ?? []), author.username].filter(Boolean);
+
+	if (usernames.length && usernames.some(u => config.messages.blacklist.includes(u))) {
+		Client._log.info('Preventing forward of blacklisted user: ' + usernames.join(' or '));
 		return;
 	}
 
@@ -34,15 +36,15 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 		const reply = await message.getReplyMessage() as Reply;
 
 		for (const listener of listeners.filter(l => l.forum) as Listener[]) {
-			onForumMessage({ message, chat, chatId, author, reply, listener });
+			onForumMessage({ message, chat, chatId, author, reply, listener, usernames });
 		}
 	} else if (isLinked) {
 		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true) as Listener[]) {
-			onLinkedMessage({ message, chat, chatId, author, listener });
+			onLinkedMessage({ message, chat, chatId, author, listener, usernames });
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
-			onGroupMessage({ message, chat, chatId, author, listener });
+			onGroupMessage({ message, chat, chatId, author, listener, usernames });
 		}
 	}
 }
@@ -50,12 +52,13 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 interface HandlerArguments {
 	chatId: bigInt.BigInteger;
 	message: Api.Message;
+	usernames: string[];
 	listener: Listener;
 	author: Api.User;
 	chat: Chat;
 }
 
-async function onForumMessage({ message, author, chat, chatId, reply, listener }: HandlerArguments & { reply: Reply; }) {
+async function onForumMessage({ message, author, chat, chatId, reply, listener, usernames }: HandlerArguments & { reply: Reply; }) {
 	if (!listener.stickers && message.sticker) return;
 
 	const isTopic = reply?.replyTo?.forumTopic ?? false;
@@ -77,7 +80,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 
 	if (listener.channels?.length) return;
 
-	const user = listener.users?.find(user => user === author.username);
+	const user = listener.users?.find(user => usernames.some(u => u === user));
 	if (listener.users?.length && !user) return;
 
 	const files = await getFiles(message);
@@ -86,10 +89,11 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 
 	const hasReply = reply?.id !== topic?.id;
 	const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
+	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username].filter(Boolean);
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
-	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username);
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor?.username);
+	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.some(u => (listener.embedded as string[])!.includes(u as string));
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u as string));
 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
 	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`;
@@ -123,18 +127,18 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 }
 
 
-async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
+async function onLinkedMessage({ message, author, chat, usernames, listener }: HandlerArguments) {
 	const files = await getFiles(message);
 	if (!message.rawText && !files.length) return;
 	if (!listener.stickers && message.sticker) return;
 
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
-	const author = await message.getSender() as Api.User;
+	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username].filter(Boolean);
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
-	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username);
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor?.username);
+	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.every(u => (listener.embedded as string[])!.includes(u));
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.every(u => (listener.embedded as string[])!.includes(u));
 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
 	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`;
@@ -167,8 +171,8 @@ async function onLinkedMessage({ message, chat, listener }: HandlerArguments) {
 	}
 };
 
-async function onGroupMessage({ message, author, chat, listener }: HandlerArguments) {
-	const user = listener.users?.find(user => user === author.username);
+async function onGroupMessage({ message, author, usernames, chat, listener }: HandlerArguments) {
+	const user = listener.users?.find(user => usernames.some(u => user === u));
 	if (listener.users?.length && !user) return;
 	if (!listener.stickers && message.sticker) return;
 
@@ -178,10 +182,11 @@ async function onGroupMessage({ message, author, chat, listener }: HandlerArgume
 
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
+	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username].filter(Boolean);
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
-	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(author.username);
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && (listener.embedded as string[])!.includes(replyAuthor?.username);
+	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.some(u => (listener.embedded as string[])!.includes(u));
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u));
 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
 	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`;
