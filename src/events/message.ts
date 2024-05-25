@@ -104,7 +104,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
 	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`;
 
-	const content = [!shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
+	const content = [listener.mention ? '@everyone' : '', !shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
 
 	const embed: APIEmbed = {
 		color: listener.embedColor ?? 16711680,
@@ -147,7 +147,7 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
 	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`;
 
-	const content = [!shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
+	const content = [listener.mention ? '@everyone' : '', !shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
 
 	const embed: APIEmbed = {
 		color: listener.embedColor ?? 16711680,
@@ -193,7 +193,7 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
 	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`;
 
-	const content = [!shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
+	const content = [listener.mention ? '@everyone' : '', !shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
 
 	const embed: APIEmbed = {
 		color: listener.embedColor ?? 16711680,
