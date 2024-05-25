@@ -16,8 +16,10 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	if (!chat || !author) return;
 
-	if (author.username && config.messages.blacklist.includes(author.username)) {
-		Client._log.info('Preventing forward of blacklisted user: ' + author.username);
+	const usernames = [...(author.usernames?.map(u => u.username) ?? []), author.username].filter(Boolean);
+
+	if (usernames.length && usernames.some(u => config.messages.blacklist.includes(u))) {
+		Client._log.info('Preventing forward of blacklisted user: ' + usernames.join(' or '));
 		return;
 	}
 
@@ -33,15 +35,15 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 		const reply = await message.getReplyMessage() as Reply;
 
 		for (const listener of listeners.filter(l => l.forum) as Listener[]) {
-			onForumMessage({ message, chat, chatId, author, reply, listener });
+			onForumMessage({ message, chat, chatId, author, reply, listener, usernames });
 		}
 	} else if (isLinked) {
 		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true) as Listener[]) {
-			onLinkedMessage({ message, chat, chatId, author, listener });
+			onLinkedMessage({ message, chat, chatId, author, listener, usernames });
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
-			onGroupMessage({ message, chat, chatId, author, listener });
+			onGroupMessage({ message, chat, chatId, author, listener, usernames });
 		}
 	}
 }
@@ -49,12 +51,13 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 interface HandlerArguments {
 	chatId: bigInt.BigInteger;
 	message: Api.Message;
+	usernames: string[];
 	listener: Listener;
 	author: Api.User;
 	chat: Chat;
 }
 
-async function onForumMessage({ message, author, chat, chatId, reply, listener }: HandlerArguments & { reply: Reply; }) {
+async function onForumMessage({ message, author, chat, chatId, reply, listener, usernames }: HandlerArguments & { reply: Reply; }) {
 	const isTopic = reply?.replyTo?.forumTopic ?? false;
 	const topicId = reply?.replyTo?.replyToTopId ?? reply?.replyTo?.replyToMsgId;
 
@@ -74,7 +77,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 
 	if (listener.channels?.length) return;
 
-	const user = listener.users?.find(user => user === author.username);
+	const user = listener.users?.find(user => usernames.some(u => u === user));
 	if (listener.users?.length && !user) return;
 
 	const files = await getFiles(message);
@@ -83,6 +86,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 
 	const hasReply = reply?.id !== topic?.id;
 	const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
+	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username].filter(Boolean);
 
 	Store.add({
 		listener,
@@ -101,7 +105,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener }
 		reply: {
 			author: {
 				id: replyAuthor?.id.toString(),
-				username: replyAuthor?.username
+				username: replyAuthorUsernames.join(' or ')
 			},
 			id: reply?.id.toString(),
 			text: reply ? getContent(reply, listener, channel) : null
@@ -116,6 +120,7 @@ async function onLinkedMessage({ message, chat, author, chatId, listener }: Hand
 
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.Channel;
+	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username].filter(Boolean);
 
 	Store.add({
 		listener,
@@ -134,7 +139,7 @@ async function onLinkedMessage({ message, chat, author, chatId, listener }: Hand
 		reply: {
 			author: {
 				id: replyAuthor?.id.toString(),
-				username: replyAuthor?.username
+				username: replyAuthorUsernames.join(' or ')
 			},
 			id: reply?.id.toString(),
 			text: reply ? getContent(reply, listener) : null
@@ -152,6 +157,7 @@ async function onGroupMessage({ message, author, chatId, chat, listener }: Handl
 
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
+	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username].filter(Boolean);
 
 
 	Store.add({
@@ -172,7 +178,7 @@ async function onGroupMessage({ message, author, chatId, chat, listener }: Handl
 		reply: {
 			author: {
 				id: replyAuthor?.id.toString(),
-				username: replyAuthor?.username
+				username: replyAuthorUsernames.join(' or ')
 			},
 			id: reply?.id.toString(),
 			text: reply ? getContent(reply, listener) : null
