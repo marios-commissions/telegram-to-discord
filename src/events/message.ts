@@ -28,25 +28,25 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id} - Channel Type: ${isForum ? 'Forum' : isLinked ? 'Linked' : 'Group/Private'}`);
 
-	const listeners = config.listeners.filter(l => l.group == chatId.toString() || l.users?.includes(author?.id.toString()));
+	const listeners = config.listeners.filter(l => l.group == chatId.toString() || usernames.some(u => l.users?.includes(u)));
 	if (!listeners.length) return;
 
 	if (isForum) {
 		const reply = await message.getReplyMessage() as Reply;
 
-		for (const listener of listeners.filter(l => l.forum) as Listener[]) {
+		for (const listener of listeners.filter(l => l.forum || (!l.group && l.users?.length)) as Listener[]) {
 			if (!listener.stickers && message.sticker) return;
 
 			onForumMessage({ message, chat, chatId, author, reply, listener, usernames });
 		}
 	} else if (isLinked) {
-		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true) as Listener[]) {
+		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true || (!l.group && l.users?.length)) as Listener[]) {
 			if (!listener.stickers && message.sticker) return;
 
 			onLinkedMessage({ message, chat, chatId, author, listener, usernames });
 		}
 	} else {
-		for (const listener of listeners.filter(l => !l.forum) as Listener[]) {
+		for (const listener of listeners.filter(l => !l.forum || (!l.group && l.users?.length)) as Listener[]) {
 			if (!listener.stickers && message.sticker) return;
 
 			onGroupMessage({ message, chat, chatId, author, listener, usernames });
@@ -81,10 +81,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 		return false;
 	});
 
-	if (listener.channels?.length) return;
-
-	const user = listener.users?.find(user => usernames.some(u => u === user));
-	if (listener.users?.length && !user) return;
+	if (!listener.users?.length && !listener.channels?.length) return;
 
 	const files = await getFiles(message);
 
