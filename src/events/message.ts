@@ -17,7 +17,7 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	if (!chat || !author) return;
 
-	const usernames = [...(author.usernames?.map(u => u.username) ?? []), author.username].filter(Boolean);
+	const usernames = [...(author.usernames?.map(u => u.username) ?? []), author.username, author?.id?.toString()].filter(Boolean);
 
 	if (usernames.length && usernames.some(u => config.messages.blacklist.includes(u))) {
 		Client._log.info('Preventing forward of blacklisted user: ' + usernames.join(' or '));
@@ -92,7 +92,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 
 	const hasReply = reply?.id !== topic?.id;
 	const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
-	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username].filter(Boolean);
+	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.some(u => (listener.embedded as string[])!.includes(u as string));
@@ -137,7 +137,7 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
-	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username].filter(Boolean);
+	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.every(u => (listener.embedded as string[])!.includes(u));
@@ -185,7 +185,7 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
-	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username].filter(Boolean);
+	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.some(u => (listener.embedded as string[])!.includes(u));
