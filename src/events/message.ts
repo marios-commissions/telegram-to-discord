@@ -175,7 +175,7 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 };
 
 async function onGroupMessage({ message, author, usernames, chat, listener }: HandlerArguments) {
-	const user = listener.users?.find(user => usernames.some(u => user === u));
+	const user = listener.users?.find?.(user => usernames.some(u => user === u));
 	if (listener.users?.length && !user) return;
 	if (!listener.stickers && message.sticker) return;
 
