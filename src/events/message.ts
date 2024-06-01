@@ -99,7 +99,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u as string));
 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
-	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`;
+	const messageText = message.rawText && `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`;
 
 	const content = [listener.mention ? '@everyone' : '', !shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
 
