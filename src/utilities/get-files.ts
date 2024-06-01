@@ -41,7 +41,7 @@ async function getFiles(message: Api.Message) {
 		}
 
 		const attrib = payload.attributes?.find(a => a.fileName)?.fileName;
-		const file = id + '.' + (payload.mimeType ? mimeTypes.extension(payload.mimeType) : 'png');
+		const file = id + '.' + (payload.mimeType ? payload.mimeType === 'audio/ogg' ? 'ogg' : mimeTypes.extension(payload.mimeType) : 'png');
 
 		files.push({ path: filePath, name: attrib ?? file, buffer: buf, mimeType: payload.mimeType || 'image/png' });
 	}
