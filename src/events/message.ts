@@ -128,14 +128,14 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
+			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply && shouldShowReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
+			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
 			content
 		}, files);
 	}
@@ -173,14 +173,14 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
+			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
+			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
 			content
 		}, files);
 	}
@@ -222,14 +222,14 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
+			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
+			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
 			content
 		}, files);
 	}
