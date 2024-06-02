@@ -15,6 +15,7 @@ export type ReplyAction = {
 export interface Listener {
 	users?: string[];
 	name: string;
+	repliesOnly?: boolean;
 	group: string;
 	remove?: string[];
 	forum?: boolean;
@@ -22,7 +23,12 @@ export interface Listener {
 	webhook?: string;
 	pins?: boolean;
 	embeds?: boolean;
-	embedded?: boolean;
+	embedded?: boolean | string[];
+	allowDMs?: boolean;
+	showUser?: boolean;
+	showReplies?: boolean;
+	useReplyUserInsteadOfAuthor?: boolean;
+	mention?: boolean;
 	embedColor?: number;
 	extraWebhookParameters?: any[];
 	channels?: {

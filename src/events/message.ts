@@ -94,18 +94,26 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 
 	if (!message.rawText && !files.length) return;
 
-	const hasReply = reply?.id !== topic?.id;
-	const replyAuthor = (listener.replies ?? true) && hasReply && await reply?.getSender?.() as Api.User;
+	const replyAuthor = await reply?.getSender?.() as Api.User;
+	if (listener.repliesOnly && !replyAuthor) return;
+
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.some(u => (listener.embedded as string[])!.includes(u as string));
 	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u as string));
+	const shouldShowReply = listener.showReplies ?? true;
 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
-	const messageText = message.rawText && `${(listener.showNames ?? true) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener, channel)}`;
+	const messageText = message.rawText && `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener, channel)}`;
 
-	const content = [listener.mention ? '@everyone' : '', !shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
+	const content = [
+		listener.mention ? '@everyone' : '',
+		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
+		messageText
+	].filter(Boolean).join('\n').trim();
+
+	console.log(content);
 
 	const embed: APIEmbed = {
 		color: listener.embedColor ?? 16711680,
@@ -120,14 +128,14 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
+			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
 			content: shouldEmbedReply ? content : '',
-			embeds: [!shouldEmbedReply ? embed : replyEmbed]
+			embeds: [!shouldEmbedReply && shouldShowReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
+			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
 			content
 		}, files);
 	}
@@ -138,18 +146,19 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 	if (!message.rawText && !files.length) return;
 	if (!listener.stickers && message.sticker) return;
 
-	const reply = (listener.replies ?? true) && await message.getReplyMessage() as Reply;
+	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.every(u => (listener.embedded as string[])!.includes(u));
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.every(u => (listener.embedded as string[])!.includes(u));
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.every(u => (listener.embedded as string[]).includes(u.toString()));
+	const shouldShowReply = listener.showReplies ?? true;
 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
-	const messageText = `${(listener.showNames ?? true) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener)}`;
+	const messageText = `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener)}`;
 
-	const content = [listener.mention ? '@everyone' : '', !shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
+	const content = [listener.mention ? '@everyone' : '', (!shouldEmbedReply && shouldShowReply) ? replyText : '', , messageText].filter(Boolean).join('\n').trim();
 
 	const embed: APIEmbed = {
 		color: listener.embedColor ?? 16711680,
@@ -164,14 +173,14 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
+			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
+			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
 			content
 		}, files);
 	}
@@ -186,18 +195,19 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 
 	if (!message.rawText && !files.length) return;
 
-	const reply = (listener.replies ?? true) && await message.getReplyMessage() as Reply;
+	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.some(u => (listener.embedded as string[])!.includes(u));
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u));
+	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u.toString()));
+	const shouldShowReply = listener.showReplies ?? true;
 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
-	const messageText = `${(listener.showNames ?? true) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener)}`;
+	const messageText = `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener)}`;
 
-	const content = [listener.mention ? '@everyone' : '', !shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
+	const content = [listener.mention ? '@everyone' : '', (!shouldEmbedReply && shouldShowReply) ? replyText : '', , messageText].filter(Boolean).join('\n').trim();
 
 	const embed: APIEmbed = {
 		color: listener.embedColor ?? 16711680,
@@ -212,14 +222,14 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
+			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
+			username: listener.name ?? (listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title,
 			content
 		}, files);
 	}
