@@ -14,7 +14,6 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	const author = await message.getSender() as Api.User;
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
-
 	if (!chat || !author) return;
 
 	const usernames = [...(author.usernames?.map(u => u.username) ?? []), author.username, author?.id?.toString()].filter(Boolean);
@@ -24,6 +23,8 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 		return;
 	}
 
+	// @ts-ignore
+	const isDM = chat.className === 'User';
 	const isForum = chat.forum;
 	const isLinked = chat.hasLink || chat.broadcast;
 
@@ -36,19 +37,22 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 		const reply = await message.getReplyMessage() as Reply;
 
 		for (const listener of listeners.filter(l => l.forum || (!l.group && l.users?.length)) as Listener[]) {
-			if (!listener.stickers && message.sticker) return;
+			if (!listener.stickers && message.sticker) continue;
+			if (isDM && !listener.allowDMs) continue;
 
 			onForumMessage({ message, chat, chatId, author, reply, listener, usernames });
 		}
 	} else if (isLinked) {
 		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true || (!l.group && l.users?.length)) as Listener[]) {
-			if (!listener.stickers && message.sticker) return;
+			if (!listener.stickers && message.sticker) continue;
+			if (isDM && !listener.allowDMs) continue;
 
 			onLinkedMessage({ message, chat, chatId, author, listener, usernames });
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum || (!l.group && l.users?.length)) as Listener[]) {
-			if (!listener.stickers && message.sticker) return;
+			if (!listener.stickers && message.sticker) continue;
+			if (isDM && !listener.allowDMs) continue;
 
 			onGroupMessage({ message, chat, chatId, author, listener, usernames });
 		}
@@ -91,7 +95,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	if (!message.rawText && !files.length) return;
 
 	const hasReply = reply?.id !== topic?.id;
-	const replyAuthor = hasReply && await reply?.getSender?.() as Api.User;
+	const replyAuthor = (listener.replies ?? true) && hasReply && await reply?.getSender?.() as Api.User;
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
 	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
@@ -99,7 +103,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u as string));
 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
-	const messageText = message.rawText && `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener, channel)}`;
+	const messageText = message.rawText && `${(listener.showNames ?? true) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener, channel)}`;
 
 	const content = [listener.mention ? '@everyone' : '', !shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
 
@@ -116,26 +120,25 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name,
+			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name,
+			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
 			content
 		}, files);
 	}
 }
-
 
 async function onLinkedMessage({ message, author, chat, usernames, listener }: HandlerArguments) {
 	const files = await getFiles(message);
 	if (!message.rawText && !files.length) return;
 	if (!listener.stickers && message.sticker) return;
 
-	const reply = await message.getReplyMessage() as Reply;
+	const reply = (listener.replies ?? true) && await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
@@ -144,7 +147,7 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.every(u => (listener.embedded as string[])!.includes(u));
 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
-	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`;
+	const messageText = `${(listener.showNames ?? true) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener)}`;
 
 	const content = [listener.mention ? '@everyone' : '', !shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
 
@@ -161,14 +164,14 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name,
+			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name,
+			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
 			content
 		}, files);
 	}
@@ -183,7 +186,7 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 
 	if (!message.rawText && !files.length) return;
 
-	const reply = await message.getReplyMessage() as Reply;
+	const reply = (listener.replies ?? true) && await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
@@ -192,7 +195,7 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u));
 
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
-	const messageText = `${codeblock((author?.firstName ?? chat.title) + ':')} ${getContent(message, listener)}`;
+	const messageText = `${(listener.showNames ?? true) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener)}`;
 
 	const content = [listener.mention ? '@everyone' : '', !shouldEmbedReply ? replyText : '', messageText].filter(Boolean).join('\n').trim();
 
@@ -209,14 +212,14 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name,
+			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name,
+			username: listener.name ?? (listener.showNames ?? true) ? chat.title : `${author.username} | ${chat.title ?? 'DM'}`,
 			content
 		}, files);
 	}
