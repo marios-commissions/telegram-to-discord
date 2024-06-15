@@ -6,6 +6,7 @@ import { Client, Webhook } from '~/structures';
 import { Api } from 'telegram';
 import config from '~/config';
 import { type APIEmbed } from 'discord-api-types/v10';
+import { inspect } from 'util';
 
 Client.addEventHandler(onMessage, new NewMessage());
 
@@ -14,7 +15,10 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	const author = await message.getSender() as Api.User;
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
-	if (!chat || !author) return;
+	if (!chat || !author) {
+		Client._log.info('No chat or author: ' + inspect(chat) + inspect(author));
+		return;
+	}
 
 	const usernames = [...(author.usernames?.map(u => u.username) ?? []), author.username, author?.id?.toString()].filter(Boolean);
 
@@ -32,6 +36,8 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	const listeners = config.listeners.filter(l => l.group == chatId.toString() || usernames.some(u => l.users?.includes(u)));
 	if (!listeners.length) return;
+
+	console.log(listeners);
 
 	if (isForum) {
 		const reply = await message.getReplyMessage() as Reply;
@@ -113,7 +119,6 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 		messageText
 	].filter(Boolean).join('\n').trim();
 
-	console.log(content);
 
 	const embed: APIEmbed = {
 		color: listener.embedColor ?? 16711680,
