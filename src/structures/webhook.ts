@@ -1,8 +1,7 @@
 import { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
 import { createLogger } from '~/structures/logger';
 import { splitMessage } from '~/utilities';
-import FormData from 'form-data';
-import { inspect } from 'util';
+import sleep from '~/utilities/sleep';
 
 interface File {
 	path: string;
@@ -30,38 +29,38 @@ class Webhook {
 		}
 
 		try {
-			const form = new FormData();
+			const data = new FormData();
 
-			form.append('payload_json', JSON.stringify(message));
+			data.append('payload_json', JSON.stringify(message));
 
 			if (files?.length) {
 				for (let i = 1; i < files.length + 1; i++) {
 					const file = files[i - 1];
 					const field = 'file' + i;
 
-					form.append(field, file.buffer, { filename: file.name });
+					data.append(field, new Blob([file.buffer]), file.name);
 				}
 			}
 
-			return await new Promise((resolve, reject) => {
-				form.submit(url, (err, res) => {
-					if (err) {
-						Logger.error(err.message);
-						throw err;
-					}
-
-					res.on('end', resolve);
-					res.on('error', reject);
-
-					Logger.debug(`Forwarding payload to webhook.`);
-					Logger.debug(inspect({ url, message, files }));
-					res.resume();
-				});
+			const res = await fetch(url, {
+				method: 'POST',
+				body: data
 			});
+
+			if (!res.ok) {
+				const data = await res.json();
+
+				if (!data.retry_after) {
+					Logger.error('Received error:', data);
+					return;
+				}
+
+				Logger.log(`Hit ratelimit, waiting ${data.retry_after * 1000}ms.`);
+				await sleep(data.retry_after * 1000);
+				await this.send(url, message, files);
+			}
 		} catch (e) {
-			Logger.error('Failed to send to webhook!\n');
-			Logger.error(inspect(e));
-			Logger.error(inspect({ url, message }));
+			Logger.log(`!! Webhook failed to send: ${e.message} !!`);
 		}
 	};
 }
