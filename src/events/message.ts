@@ -30,7 +30,18 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id} - Channel Type: ${isForum ? 'Forum' : isLinked ? 'Linked' : 'Group/Private'}`);
 
-	const listeners = config.listeners.filter(l => l.group == chatId.toString() || usernames.some(u => l.users?.includes(u)));
+	const listeners = config.listeners.filter(listener => {
+		if (listener.users?.length && !usernames.some(u => listener.users?.includes(u))) {
+			return false;
+		}
+
+		if (listener.group && listener.group == chatId.toString()) {
+			return true;
+		}
+
+		return false;
+	});
+
 	if (!listeners.length) return;
 
 	if (isForum) {
@@ -71,6 +82,7 @@ interface HandlerArguments {
 async function onForumMessage({ message, author, chat, chatId, reply, listener, usernames }: HandlerArguments & { reply: Reply; }) {
 	if (!listener.stickers && message.sticker) return;
 
+	const hasReply = !reply?.action;
 	const isTopic = reply?.replyTo?.forumTopic ?? false;
 	const topicId = reply?.replyTo?.replyToTopId ?? reply?.replyTo?.replyToMsgId;
 
@@ -104,7 +116,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u as string));
 	const shouldShowReply = listener.showReplies ?? true;
 
-	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
+	const replyText = replyAuthor && hasReply && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
 	const messageText = message.rawText && `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener, channel)}`;
 
 	const content = [
