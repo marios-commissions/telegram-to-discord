@@ -38,7 +38,7 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 			return true;
 		}
 
-		return false;
+		return true;
 	});
 
 	if (!listeners.length) return;
