@@ -34,8 +34,8 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 			return false;
 		}
 
-		if (listener.group && listener.group == chatId.toString()) {
-			return true;
+		if (listener.group && listener.group != chatId.toString()) {
+			return false;
 		}
 
 		return true;
