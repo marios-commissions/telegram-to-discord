@@ -114,7 +114,12 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
-	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
+	const sites = `(${config.messages.allowedEmbeds.map(r => r.replaceAll('.', '\\.')).join('|')})`;
+	const embeddable = new RegExp(`https?:\/\/(www\.)?${sites}([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)`, 'mi');
+	const link = listener.dontEmbedSingularLinks && message.rawText?.match(embeddable);
+	const isSingularLink = link && message.rawText.length === link[0].length;
+
+	const shouldEmbed = !isSingularLink && typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.some(u => (listener.embedded as string[])!.includes(u as string));
 	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u as string));
 	const shouldShowReply = listener.showReplies ?? true;
@@ -164,7 +169,12 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 	const replyAuthor = await reply?.getSender() as Api.User;
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
-	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
+	const sites = `(${config.messages.allowedEmbeds.map(r => r.replaceAll('.', '\\.')).join('|')})`;
+	const embeddable = new RegExp(`https?:\/\/(www\.)?${sites}([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)`, 'mi');
+	const link = message.rawText?.match(embeddable);
+	const isSingularLink = link && message.rawText.length === link[0].length;
+
+	const shouldEmbed = !isSingularLink && typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.every(u => (listener.embedded as string[])!.includes(u));
 	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.every(u => (listener.embedded as string[]).includes(u.toString()));
 	const shouldShowReply = listener.showReplies ?? true;
@@ -213,7 +223,12 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 	const replyAuthor = await reply?.getSender() as Api.User;
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
-	const shouldEmbed = typeof listener.embedded === 'boolean' && listener.embedded;
+	const sites = `(${config.messages.allowedEmbeds.map(r => r.replaceAll('.', '\\.')).join('|')})`;
+	const embeddable = new RegExp(`https?:\/\/(www\.)?${sites}([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)`, 'mi');
+	const link = message.rawText?.match(embeddable);
+	const isSingularLink = link && message.rawText.length === link[0].length;
+
+	const shouldEmbed = !isSingularLink && typeof listener.embedded === 'boolean' && listener.embedded;
 	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.some(u => (listener.embedded as string[])!.includes(u));
 	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u.toString()));
 	const shouldShowReply = listener.showReplies ?? true;
