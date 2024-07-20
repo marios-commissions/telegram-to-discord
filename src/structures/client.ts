@@ -25,7 +25,7 @@ class Client extends TelegramClient {
 		const dialogs = await this.getDialogs();
 		const groups = dialogs.filter(d => d.isChannel || d.isGroup);
 
-		Logger.info('Channels\n' + groups.map(e => `${e.name} » ${e.id.toString()}`).join('\n'));
+		Logger.info('Channels\n' + groups.map(e => `${e.name} » ${e.id.toString()} ${e.pinned ? '(Pinned)' : ''}`).join('\n'));
 
 		import('~/src/events');
 	}
