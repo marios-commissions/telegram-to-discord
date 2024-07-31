@@ -60,7 +60,7 @@ class Client extends TelegramClient {
 
 		await Promise.all(promises);
 
-		Logger.info('Channels\n' + banner.join('\n'));
+		console.info('Channels\n' + banner.join('\n'));
 
 		import('~/src/events');
 	}
