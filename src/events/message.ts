@@ -119,7 +119,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	const shouldShowReply = listener.showReplies ?? true;
 
 	const replyText = replyAuthor && hasReply && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
-	const messageText = message.rawText && `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener, channel)}`;
+	const messageText = `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${message.rawText && getContent(message, listener, channel)}`;
 
 	const content = [
 		listener.mention ? '@everyone' : '',
