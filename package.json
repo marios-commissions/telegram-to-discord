@@ -1,33 +1,33 @@
 {
-  "name": "telegram-to-discord",
-  "version": "1.0.0",
-  "description": "Forward telegram group messages to Discord using webhooks. Supports attachments & allows for a wide configuration of filters for groups.",
-  "main": "dist/index.js",
-  "author": "eternal (eternal.git@gmail.com)",
-  "license": "Unlicensed",
-  "scripts": {
-    "build": "swc src -d dist -D --delete-dir-on-start",
-    "start": "node dist/index.js"
-  },
-  "dependencies": {
-    "big-integer": "^1.6.52",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "form-data": "^4.0.0",
-    "input": "^1.0.1",
-    "mime-types": "^2.1.35",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "source-map-support": "^0.5.21",
-    "telegram": "^2.22.2",
-    "ws": "^8.17.0"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.14.2",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@types/ws": "^8.5.10",
-    "discord-api-types": "^0.37.89"
-  }
+	"name": "telegram-to-discord",
+	"version": "1.0.0",
+	"description": "Forward telegram group messages to Discord using webhooks. Supports attachments & allows for a wide configuration of filters for groups.",
+	"main": "dist/index.js",
+	"author": "eternal (eternal.git@gmail.com)",
+	"license": "Unlicensed",
+	"scripts": {
+		"build": "swc src -d dist -D --delete-dir-on-start --strip-leading-paths",
+		"start": "node dist/index.js"
+	},
+	"dependencies": {
+		"big-integer": "^1.6.52",
+		"dotenv": "^16.4.5",
+		"express": "^4.19.2",
+		"form-data": "^4.0.0",
+		"input": "^1.0.1",
+		"mime-types": "^2.1.35",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"source-map-support": "^0.5.21",
+		"telegram": "^2.22.2",
+		"ws": "^8.17.0"
+	},
+	"devDependencies": {
+		"@types/express": "^4.17.21",
+		"@types/node": "^20.14.2",
+		"@types/react": "^18.3.3",
+		"@types/react-dom": "^18.3.0",
+		"@types/ws": "^8.5.10",
+		"discord-api-types": "^0.37.89"
+	}
 }
