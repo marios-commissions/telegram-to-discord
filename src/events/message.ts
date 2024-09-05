@@ -51,6 +51,8 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 		const reply = await message.getReplyMessage() as Reply;
 
 		for (const listener of listeners.filter(l => l.forum || (!l.group && l.users?.length)) as Listener[]) {
+			if (listener.whitelistOnly && !(listener.whitelist ?? []).includes(chatId.toString())) continue;
+			if (!listener.whitelistOnly && (listener.blacklist ?? []).includes(chatId.toString())) continue;
 			if (!listener.stickers && message.sticker) continue;
 			if (isDM && !listener.allowDMs) continue;
 
@@ -58,6 +60,8 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 		}
 	} else if (isLinked) {
 		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true || (!l.group && l.users?.length)) as Listener[]) {
+			if (listener.whitelistOnly && !(listener.whitelist ?? []).includes(chatId.toString())) continue;
+			if (!listener.whitelistOnly && (listener.blacklist ?? []).includes(chatId.toString())) continue;
 			if (!listener.stickers && message.sticker) continue;
 			if (isDM && !listener.allowDMs) continue;
 
@@ -65,6 +69,8 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum || (!l.group && l.users?.length)) as Listener[]) {
+			if (listener.whitelistOnly && !(listener.whitelist ?? []).includes(chatId.toString())) continue;
+			if (!listener.whitelistOnly && (listener.blacklist ?? []).includes(chatId.toString())) continue;
 			if (!listener.stickers && message.sticker) continue;
 			if (isDM && !listener.allowDMs) continue;
 
@@ -113,6 +119,8 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	if (listener.repliesOnly && !replyAuthor) return;
 
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
+
+	if (listener.replyingTo && !listener.replyingTo?.some(t => replyAuthorUsernames.includes(t))) return;
 
 	const sites = `(${config.messages.allowedEmbeds.map(r => r.replaceAll('.', '\\.')).join('|')})`;
 	const embeddable = new RegExp(`https?:\/\/(www\.)?${sites}([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)`, 'mi');
@@ -169,6 +177,8 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 	const replyAuthor = await reply?.getSender() as Api.User;
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
 
+	if (listener.replyingTo && !listener.replyingTo?.some(t => replyAuthorUsernames.includes(t))) return;
+
 	const sites = `(${config.messages.allowedEmbeds.map(r => r.replaceAll('.', '\\.')).join('|')})`;
 	const embeddable = new RegExp(`https?:\/\/(www\.)?${sites}([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)`, 'mi');
 	const link = message.rawText?.match(embeddable);
@@ -222,6 +232,8 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
 	const replyAuthorUsernames = [...(replyAuthor?.usernames ?? []), replyAuthor?.username, replyAuthor?.id?.toString()].filter(Boolean);
+
+	if (listener.replyingTo && !listener.replyingTo?.some(t => replyAuthorUsernames.includes(t))) return;
 
 	const sites = `(${config.messages.allowedEmbeds.map(r => r.replaceAll('.', '\\.')).join('|')})`;
 	const embeddable = new RegExp(`https?:\/\/(www\.)?${sites}([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)`, 'mi');
