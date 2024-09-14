@@ -10,7 +10,6 @@ import config from '~/config';
 Client.addEventHandler(onMessage, new NewMessage());
 
 async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; }) {
-
 	const author = await message.getSender() as Api.User;
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
 	if (!chat || !author) return;
@@ -137,6 +136,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 
 	const content = [
 		listener.mention ? '@everyone' : '',
+		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
 	].filter(Boolean).join('\n').trim();
@@ -192,7 +192,12 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
 	const messageText = `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener)}`;
 
-	const content = [listener.mention ? '@everyone' : '', (!shouldEmbedReply && shouldShowReply) ? replyText : '', , messageText].filter(Boolean).join('\n').trim();
+	const content = [
+		listener.mention ? '@everyone' : '',
+		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
+		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
+		messageText
+	].filter(Boolean).join('\n').trim();
 
 	const embed: APIEmbed = {
 		color: listener.embedColor ?? 16711680,
@@ -248,7 +253,12 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
 	const messageText = `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener)}`;
 
-	const content = [listener.mention ? '@everyone' : '', (!shouldEmbedReply && shouldShowReply) ? replyText : '', , messageText].filter(Boolean).join('\n').trim();
+	const content = [
+		listener.mention ? '@everyone' : '',
+		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
+		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
+		messageText
+	].filter(Boolean).join('\n').trim();
 
 	const embed: APIEmbed = {
 		color: listener.embedColor ?? 16711680,
