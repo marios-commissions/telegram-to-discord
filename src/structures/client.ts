@@ -1,9 +1,8 @@
-import { Api, TelegramClient } from 'telegram';
-import input from 'input';
-
 import { ClientOptions, SessionName } from '~/constants';
 import { createLogger } from '~/structures/logger';
+import { Api, TelegramClient } from 'telegram';
 import config from '~/config';
+import input from 'input';
 
 const Logger = createLogger('Client');
 

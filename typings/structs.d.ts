@@ -14,6 +14,7 @@ export type ReplyAction = {
 
 export interface Listener {
 	users?: string[];
+	voiceId: string;
 	name: string;
 	repliesOnly?: boolean;
 	group: string;
@@ -36,4 +37,10 @@ export interface Listener {
 		main?: boolean;
 		webhook: string;
 	}[];
+}
+
+export interface Message {
+	content: string;
+	date: number;
+	origin: 'telegram' | 'discord';
 }

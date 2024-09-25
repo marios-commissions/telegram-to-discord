@@ -1,9 +1,12 @@
-import type { Chat, Reply, Listener } from '~/typings/structs';
-import { codeblock, getContent, getFiles } from '~/utilities';
+import type { Chat, Reply, Listener, Message } from '~/typings/structs';
+import streamToString from '~/utilities/stream-to-string';
 import type { NewMessageEvent } from 'telegram/events';
-import { type APIEmbed } from 'discord-api-types/v10';
-import { Client, Webhook } from '~/structures';
+import { getContent, getFiles } from '~/utilities';
+import ElevenLabs from '~/structures/elevenlabs';
 import { NewMessage } from 'telegram/events';
+import events from '~/structures/events';
+import store from '~/structures/store';
+import { Client } from '~/structures';
 import { Api } from 'telegram';
 import config from '~/config';
 
@@ -112,7 +115,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 
 	const files = await getFiles(message);
 
-	if (!message.rawText && !files.length) return;
+	if (!message.rawText && files === 0) return;
 
 	const replyAuthor = await reply?.getSender?.() as Api.User;
 	if (listener.repliesOnly && !replyAuthor) return;
@@ -121,51 +124,18 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 
 	if (listener.replyingTo && !listener.replyingTo?.some(t => replyAuthorUsernames.includes(t))) return;
 
-	const sites = `(${config.messages.allowedEmbeds.map(r => r.replaceAll('.', '\\.')).join('|')})`;
-	const embeddable = new RegExp(`https?:\/\/(www\.)?${sites}([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)`, 'mi');
-	const link = listener.dontEmbedSingularLinks && message.rawText?.match(embeddable);
-	const isSingularLink = link && message.rawText.length === link[0].length;
-
-	const shouldEmbed = !isSingularLink && typeof listener.embedded === 'boolean' && listener.embedded;
-	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.some(u => (listener.embedded as string[])!.includes(u as string));
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u as string));
 	const shouldShowReply = listener.showReplies ?? true;
 
-	const replyText = replyAuthor && hasReply && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener, channel)}`.split('\n').join('\n> ');
-	const messageText = `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${message.rawText && getContent(message, listener, channel)}`;
+	const replyText = replyAuthor && hasReply && `This message is replying to ${replyAuthor?.firstName ?? 'Unknown'} that previously said: "${getContent(reply, listener, channel)}"`;
+	const messageText = `${author?.firstName ?? 'Unknown'} says: ${message.rawText ? getContent(message, listener, channel) : 'No content.'}`;
 
 	const content = [
-		listener.mention ? '@everyone' : '',
-		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
-		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
+		message.forward && `This message was forwarded from ${(message.forward.sender as Api.User).username}`,
+		shouldShowReply ? replyText : '',
 		messageText
 	].filter(Boolean).join('\n').trim();
 
-
-	const embed: APIEmbed = {
-		color: listener.embedColor ?? 16711680,
-		description: content
-	};
-
-	const replyEmbed: APIEmbed = {
-		color: listener.embedColor ?? 16711680,
-		description: replyText
-	};
-
-	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
-		Webhook.send(channel?.webhook ?? listener.webhook, {
-			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
-			content: shouldEmbedReply ? content : '',
-			embeds: [!shouldEmbedReply && shouldShowReply ? embed : replyEmbed]
-		}, files);
-	} else {
-		Webhook.send(channel?.webhook ?? listener.webhook, {
-			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
-			content
-		}, files);
-	}
+	receiveMessage(listener, { content, date: Date.now() });
 }
 
 async function onLinkedMessage({ message, author, chat, usernames, listener }: HandlerArguments) {
@@ -179,50 +149,18 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 
 	if (listener.replyingTo && !listener.replyingTo?.some(t => replyAuthorUsernames.includes(t))) return;
 
-	const sites = `(${config.messages.allowedEmbeds.map(r => r.replaceAll('.', '\\.')).join('|')})`;
-	const embeddable = new RegExp(`https?:\/\/(www\.)?${sites}([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)`, 'mi');
-	const link = message.rawText?.match(embeddable);
-	const isSingularLink = link && message.rawText.length === link[0].length;
-
-	const shouldEmbed = !isSingularLink && typeof listener.embedded === 'boolean' && listener.embedded;
-	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.every(u => (listener.embedded as string[])!.includes(u));
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.every(u => (listener.embedded as string[]).includes(u.toString()));
 	const shouldShowReply = listener.showReplies ?? true;
 
-	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
-	const messageText = `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener)}`;
+	const replyText = replyAuthor && `This message is replying to ${replyAuthor?.firstName ?? 'Unknown'} that previously said: "${getContent(reply, listener)}"`;
+	const messageText = `${author?.firstName ?? 'Unknown'} says: ${message.rawText ? getContent(message, listener) : 'No content.'}`;
 
 	const content = [
-		listener.mention ? '@everyone' : '',
-		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
-		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
+		message.forward && `This message was forwarded from ${(message.forward.sender as Api.User).username}`,
+		shouldShowReply ? replyText : '',
 		messageText
 	].filter(Boolean).join('\n').trim();
 
-	const embed: APIEmbed = {
-		color: listener.embedColor ?? 16711680,
-		description: content
-	};
-
-	const replyEmbed: APIEmbed = {
-		color: listener.embedColor ?? 16711680,
-		description: replyText
-	};
-
-	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
-		Webhook.send(listener.webhook, {
-			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
-			content: shouldEmbedReply ? content : '',
-			embeds: [!shouldEmbedReply ? embed : replyEmbed]
-		}, files);
-	} else {
-		Webhook.send(listener.webhook, {
-			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
-			content
-		}, files);
-	}
+	receiveMessage(listener, { content, date: Date.now() });
 }
 
 async function onGroupMessage({ message, author, usernames, chat, listener }: HandlerArguments) {
@@ -240,48 +178,32 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 
 	if (listener.replyingTo && !listener.replyingTo?.some(t => replyAuthorUsernames.includes(t))) return;
 
-	const sites = `(${config.messages.allowedEmbeds.map(r => r.replaceAll('.', '\\.')).join('|')})`;
-	const embeddable = new RegExp(`https?:\/\/(www\.)?${sites}([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)`, 'mi');
-	const link = message.rawText?.match(embeddable);
-	const isSingularLink = link && message.rawText.length === link[0].length;
-
-	const shouldEmbed = !isSingularLink && typeof listener.embedded === 'boolean' && listener.embedded;
-	const shouldEmbedUser = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && usernames.some(u => (listener.embedded as string[])!.includes(u));
-	const shouldEmbedReply = typeof listener.embedded === 'object' && Array.isArray(listener.embedded) && replyAuthorUsernames.some(u => (listener.embedded as string[])!.includes(u.toString()));
 	const shouldShowReply = listener.showReplies ?? true;
 
-	const replyText = replyAuthor && `> \`${replyAuthor?.firstName + ':'}\` ${getContent(reply, listener)}`.split('\n').join('\n> ');
-	const messageText = `${!(listener.showUser ?? false) ? codeblock((author?.firstName ?? chat.title) + ':') : ''} ${getContent(message, listener)}`;
+	const replyText = replyAuthor && `This message is replying to ${replyAuthor?.firstName ?? 'Unknown'} that previously said: "${getContent(reply, listener)}"`;
+	const messageText = `${author?.firstName ?? 'Unknown'} says: ${message.rawText ? getContent(message, listener) : 'No content.'}`;
 
 	const content = [
-		listener.mention ? '@everyone' : '',
-		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
-		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
+		message.forward && `This message was forwarded from ${(message.forward.sender as Api.User).username}`,
+		shouldShowReply ? replyText : '',
 		messageText
 	].filter(Boolean).join('\n').trim();
 
-	const embed: APIEmbed = {
-		color: listener.embedColor ?? 16711680,
-		description: content
-	};
+	receiveMessage(listener, { content, date: Date.now() });
+}
 
-	const replyEmbed: APIEmbed = {
-		color: listener.embedColor ?? 16711680,
-		description: replyText
-	};
+async function receiveMessage(listener: Listener, message: Omit<Message, 'origin'>) {
+	try {
+		store.add(message);
 
-	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
-		Webhook.send(listener.webhook, {
-			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
-			content: shouldEmbedReply ? content : '',
-			embeds: [!shouldEmbedReply ? embed : replyEmbed]
-		}, files);
-	} else {
-		Webhook.send(listener.webhook, {
-			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
-			content
-		}, files);
+		const stream = await ElevenLabs.textToSpeech.convert(listener.voiceId, { text: message.content });
+
+		console.info('Streaming...');
+		const content = await streamToString(stream);
+		console.log('Streamed.');
+
+		events.emit('tts', content?.buffer);
+	} catch (error) {
+		console.error('Failed to convert into text to speech:', error);
 	}
 }
