@@ -7,6 +7,7 @@ import { NewMessage } from 'telegram/events';
 import { Api } from 'telegram';
 import config from '~/config';
 
+
 Client.addEventHandler(onMessage, new NewMessage());
 
 async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; }) {
@@ -28,7 +29,7 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 
 	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id} - Channel Type: ${isForum ? 'Forum' : isLinked ? 'Linked' : 'Group/Private'}`);
 
-	const listeners = config.listeners.filter(listener => {
+	const listeners = (config.listeners as Listener[]).filter(listener => {
 		if (listener.users?.length && !usernames.some(u => listener.users?.includes(u))) {
 			return false;
 		}
@@ -55,7 +56,16 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 			if (!listener.stickers && message.sticker) continue;
 			if (isDM && !listener.allowDMs) continue;
 
-			onForumMessage({ message, chat, chatId, author, reply, listener, usernames });
+			if (listener.webhook) {
+				onForumMessage({ message, chat, chatId, author, reply, listener, usernames });
+			}
+
+			if (listener.forwardTo) {
+				const chat = await Client.getEntity(listener.forwardTo);
+				if (!chat) continue;
+
+				await message.forwardTo(chat);
+			}
 		}
 	} else if (isLinked) {
 		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true || (!l.group && l.users?.length)) as Listener[]) {
@@ -64,7 +74,16 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 			if (!listener.stickers && message.sticker) continue;
 			if (isDM && !listener.allowDMs) continue;
 
-			onLinkedMessage({ message, chat, chatId, author, listener, usernames });
+			if (listener.webhook) {
+				onLinkedMessage({ message, chat, chatId, author, listener, usernames });
+			}
+
+			if (listener.forwardTo) {
+				const chat = await Client.getEntity(listener.forwardTo);
+				if (!chat) continue;
+
+				await message.forwardTo(chat);
+			}
 		}
 	} else {
 		for (const listener of listeners.filter(l => !l.forum || (!l.group && l.users?.length)) as Listener[]) {
@@ -73,7 +92,16 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 			if (!listener.stickers && message.sticker) continue;
 			if (isDM && !listener.allowDMs) continue;
 
-			onGroupMessage({ message, chat, chatId, author, listener, usernames });
+			if (listener.webhook) {
+				onGroupMessage({ message, chat, chatId, author, listener, usernames });
+			}
+
+			if (listener.forwardTo) {
+				const chat = await Client.getEntity(listener.forwardTo);
+				if (!chat) continue;
+
+				await message.forwardTo(chat);
+			}
 		}
 	}
 }

@@ -1,5 +1,6 @@
 import { Api } from 'telegram';
 
+
 export type Chat = {
 	forum: boolean;
 } & Api.Chat;
@@ -14,6 +15,13 @@ export type ReplyAction = {
 
 export interface Listener {
 	users?: string[];
+	forwardTo?: string;
+	whitelist?: string[];
+	blacklist?: string[];
+	whitelistOnly?: boolean;
+	linked?: boolean;
+	replyingTo?: string[];
+	dontEmbedSingularLinks?: boolean;
 	name: string;
 	repliesOnly?: boolean;
 	group: string;
