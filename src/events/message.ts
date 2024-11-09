@@ -15,7 +15,7 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
 	if (!chat || !author) return;
 
-	const usernames = [...(author.usernames?.map(u => u.username) ?? []), author.username, author?.id?.toString()].filter(Boolean);
+	const usernames = [...(author.usernames?.map(u => u?.username) ?? []), author.username, author?.id?.toString()].filter(Boolean);
 
 	if (usernames.length && usernames.some(u => config.messages.blacklist.includes(u))) {
 		Client._log.info('Preventing forward of blacklisted user: ' + usernames.join(' or '));
@@ -222,7 +222,7 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 
 	const content = [
 		listener.mention ? '@everyone' : '',
-		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
+		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User)?.username ?? 'Unknown'}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
 	].filter(Boolean).join('\n').trim();
