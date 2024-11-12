@@ -177,14 +177,14 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	if (shouldEmbed || shouldEmbedUser || shouldEmbedReply) {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
+			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : (listener.includeForumChannelName && channel.name ? `${chat.title} -> ${channel.name}` : chat.title)),
 			content: shouldEmbedReply ? content : '',
 			embeds: [!shouldEmbedReply && shouldShowReply ? embed : replyEmbed]
 		}, files);
 	} else {
 		Webhook.send(channel?.webhook ?? listener.webhook, {
 			...(listener.extraWebhookParameters ?? {}),
-			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : chat.title),
+			username: listener.name ?? ((listener.showUser ?? false) ? `${(listener.useReplyUserInsteadOfAuthor ? replyAuthor?.username : author.username) ?? 'Unknown'} | ${chat.title ?? 'DM'}` : (listener.includeForumChannelName && channel.name ? `${chat.title} -> ${channel.name}` : chat.title)),
 			content
 		}, files);
 	}
