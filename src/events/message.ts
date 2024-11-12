@@ -56,9 +56,7 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 			if (!listener.stickers && message.sticker) continue;
 			if (isDM && !listener.allowDMs) continue;
 
-			if (listener.webhook) {
-				onForumMessage({ message, chat, chatId, author, reply, listener, usernames });
-			}
+			onForumMessage({ message, chat, chatId, author, reply, listener, usernames });
 
 			if (listener.forwardTo) {
 				const chat = await Client.getEntity(listener.forwardTo);
@@ -74,9 +72,7 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 			if (!listener.stickers && message.sticker) continue;
 			if (isDM && !listener.allowDMs) continue;
 
-			if (listener.webhook) {
-				onLinkedMessage({ message, chat, chatId, author, listener, usernames });
-			}
+			onLinkedMessage({ message, chat, chatId, author, listener, usernames });
 
 			if (listener.forwardTo) {
 				const chat = await Client.getEntity(listener.forwardTo);
@@ -92,9 +88,7 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 			if (!listener.stickers && message.sticker) continue;
 			if (isDM && !listener.allowDMs) continue;
 
-			if (listener.webhook) {
-				onGroupMessage({ message, chat, chatId, author, listener, usernames });
-			}
+			onGroupMessage({ message, chat, chatId, author, listener, usernames });
 
 			if (listener.forwardTo) {
 				const chat = await Client.getEntity(listener.forwardTo);
@@ -136,7 +130,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 		return false;
 	});
 
-	if (!listener.users?.length && !listener.channels?.length) return;
+	if ((listener.channels.length && !channel) || (!listener.users?.length && !listener.channels?.length)) return;
 
 	const files = await getFiles(message);
 
