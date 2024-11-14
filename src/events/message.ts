@@ -130,7 +130,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 		return false;
 	});
 
-	if ((listener.channels.length && !channel) || (!listener.users?.length && !listener.channels?.length)) return;
+	if ((listener.channels?.length && !channel) || (!listener.users?.length && !listener.channels?.length)) return;
 
 	const files = await getFiles(message);
 
