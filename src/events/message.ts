@@ -30,6 +30,10 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id} - Channel Type: ${isForum ? 'Forum' : isLinked ? 'Linked' : 'Group/Private'}`);
 
 	const listeners = (config.listeners as Listener[]).filter(listener => {
+		if (listener.blacklistedUsers && usernames.some(u => listener.blacklistedUsers.includes(u))) {
+			return false;
+		}
+
 		if (listener.users?.length && !usernames.some(u => listener.users?.includes(u))) {
 			return false;
 		}
