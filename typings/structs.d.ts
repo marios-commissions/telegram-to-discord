@@ -14,6 +14,7 @@ export type ReplyAction = {
 } & Api.TypeMessageAction;
 
 export interface Listener {
+	type?: string;
 	users?: string[];
 	commands?: boolean;
 	includeForumChannelName?: boolean;
