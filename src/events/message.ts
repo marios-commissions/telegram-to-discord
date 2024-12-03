@@ -139,6 +139,8 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	const files = await getFiles(message);
 
 	if (!message.rawText && !files.length) return;
+	if (listener.excludeEmptyMessages && !message.rawText) return;
+
 
 	const replyAuthor = await reply?.getSender?.() as Api.User;
 	if (listener.repliesOnly && !replyAuthor) return;
@@ -196,7 +198,9 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 
 async function onLinkedMessage({ message, author, chat, usernames, listener }: HandlerArguments) {
 	const files = await getFiles(message);
+
 	if (!message.rawText && !files.length) return;
+	if (listener.excludeEmptyMessages && !message.rawText) return;
 	if (!listener.stickers && message.sticker) return;
 
 	const reply = await message.getReplyMessage() as Reply;
@@ -259,6 +263,7 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 	const files = await getFiles(message);
 
 	if (!message.rawText && !files.length) return;
+	if (listener.excludeEmptyMessages && !message.rawText) return;
 
 	const reply = await message.getReplyMessage() as Reply;
 	const replyAuthor = await reply?.getSender() as Api.User;
