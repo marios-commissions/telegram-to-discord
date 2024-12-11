@@ -16,6 +16,7 @@ export type ReplyAction = {
 export interface Listener {
 	type?: string;
 	users?: string[];
+	replacements?: Record<string, string>;
 	commands?: boolean;
 	includeForumChannelName?: boolean;
 	blacklistedUsers?: string[];
