@@ -238,6 +238,10 @@ async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; })
 			return false;
 		}
 
+		if (listener.hasContent?.length && !listener.hasContent.every(c => message.rawText?.includes(c))) {
+			return false;
+		}
+
 		if (listener.users?.length && !usernames.some(u => listener.users?.includes(u))) {
 			return false;
 		}

@@ -19,6 +19,7 @@ export interface Listener {
 	commands?: boolean;
 	includeForumChannelName?: boolean;
 	blacklistedUsers?: string[];
+	hasContent?: string[];
 	excludeEmptyMessages?: boolean;
 	forwardTo?: string;
 	whitelist?: string[];
