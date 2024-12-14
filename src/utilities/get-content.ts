@@ -44,7 +44,13 @@ function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 
 	if (Object.keys(replacements).length) {
 		for (const [subject, replacement] of Object.entries(replacements)) {
-			content = content.replaceAll(subject, replacement.replace(formatting, (_, group) => variables[group]));
+			const replacer = replacement.replace(formatting, (_, group) => variables[group]);
+
+			if (subject === '*') {
+				content = replacer;
+			}
+
+			content = content.replaceAll(subject, replacer);
 		}
 	}
 
