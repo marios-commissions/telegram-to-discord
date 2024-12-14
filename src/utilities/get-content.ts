@@ -3,6 +3,7 @@ import { escape } from '~/utilities';
 import { Api } from 'telegram';
 import config from '~/config';
 
+
 function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 	let content = msg.rawText;
 
@@ -33,10 +34,17 @@ function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 		content = start + replacement + end;
 	}
 
-	if (config.replacements.length) {
-		for (const { pattern, replacement } of config.replacements) {
-			const regex = new RegExp(pattern, 'gmi');
-			content = content.replaceAll(regex, replacement);
+	const variables = {
+		text: content
+	};
+
+	const formatting = new RegExp(`{{\\s*(${Object.keys(variables).join('|')})\\s*}}`, 'gmi');
+
+	const replacements: Record<string, string> = { ...(config.messages?.replacements ?? {}), ...(listener.replacements ?? {}) };
+
+	if (Object.keys(replacements).length) {
+		for (const [subject, replacement] of Object.entries(replacements)) {
+			content = content.replaceAll(subject, replacement.replace(formatting, (_, group) => variables[group]));
 		}
 	}
 
