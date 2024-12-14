@@ -35,10 +35,17 @@ function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 		content = start + replacement + end;
 	}
 
-	const replacements = { ...(config.messages?.replacements ?? {}), ...(listener.replacements ?? {}) };
+	const variables = {
+		text: content
+	};
+
+	const formatting = new RegExp(`{{\\s*(${Object.keys(variables).join('|')})\\s*}}`, 'gmi');
+
+	const replacements: Record<string, string> = { ...(config.messages?.replacements ?? {}), ...(listener.replacements ?? {}) };
+
 	if (Object.keys(replacements).length) {
 		for (const [subject, replacement] of Object.entries(replacements)) {
-			content = content.replaceAll(subject, replacement);
+			content = content.replaceAll(subject, replacement.replace(formatting, (_, group) => variables[group]));
 		}
 	}
 
