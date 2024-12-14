@@ -2,6 +2,7 @@ import type { Listener } from '~/typings/structs';
 import { Api } from 'telegram';
 import config from '~/config';
 
+
 function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 	let content = msg.rawText;
 
@@ -33,9 +34,17 @@ function getContent(msg: Api.Message, listener?: Listener, channel?: any) {
 		content = start + replacement + end;
 	}
 
-	if (config.messages?.replacements) {
-		for (const [subject, replacement] of Object.entries(config.messages.replacements)) {
-			content = content.replaceAll(subject, replacement);
+	const variables = {
+		text: content
+	};
+
+	const formatting = new RegExp(`{{\\s*(${Object.keys(variables).join('|')})\\s*}}`, 'gmi');
+
+	const replacements: Record<string, string> = { ...(config.messages?.replacements ?? {}), ...(listener.replacements ?? {}) };
+
+	if (Object.keys(replacements).length) {
+		for (const [subject, replacement] of Object.entries(replacements)) {
+			content = content.replaceAll(subject, replacement.replace(formatting, (_, group) => variables[group]));
 		}
 	}
 
