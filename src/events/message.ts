@@ -1,4 +1,5 @@
 import type { Chat, Reply, Listener } from '~/typings/structs';
+import { EditedMessage } from 'telegram/events/EditedMessage';
 import { codeblock, getContent, getFiles } from '~/utilities';
 import type { NewMessageEvent } from 'telegram/events';
 import { type APIEmbed } from 'discord-api-types/v10';
@@ -10,7 +11,13 @@ import config from '~/config';
 
 Client.addEventHandler(onMessage, new NewMessage());
 
-async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; }) {
+Client.addEventHandler((event) => {
+	// @ts-expect-error
+	event.message._edit = new Date();
+	onMessage(event);
+}, new EditedMessage());
+
+async function onMessage({ message, chatId }: NewMessageEvent) {
 	const author = await message.getSender() as Api.User;
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
 	if (!chat || !author) return;
@@ -168,6 +175,8 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 
 	const content = [
 		listener.mention ? '@everyone' : '',
+		// @ts-expect-error
+		message._edit ? `__**Edited: ${message._edit.toLocaleString()}**__` : '',
 		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
@@ -228,6 +237,8 @@ async function onLinkedMessage({ message, author, chat, usernames, listener }: H
 
 	const content = [
 		listener.mention ? '@everyone' : '',
+		// @ts-expect-error
+		message._edit ? `__**Edited: ${message._edit.toLocaleString()}**__` : '',
 		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User)?.username ?? 'Unknown'}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
@@ -290,6 +301,8 @@ async function onGroupMessage({ message, author, usernames, chat, listener }: Ha
 
 	const content = [
 		listener.mention ? '@everyone' : '',
+		// @ts-expect-error
+		message._edit ? `__**Edited: ${message._edit.toLocaleString()}**__` : '',
 		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
