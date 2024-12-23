@@ -1,5 +1,5 @@
+import { EditedMessage, type EditedMessageEvent } from 'telegram/events/EditedMessage';
 import type { Chat, Reply, Listener } from '~/typings/structs';
-import { EditedMessage } from 'telegram/events/EditedMessage';
 import { codeblock, getContent, getFiles } from '~/utilities';
 import type { NewMessageEvent } from 'telegram/events';
 import { type APIEmbed } from 'discord-api-types/v10';
@@ -11,7 +11,7 @@ import config from '~/config';
 
 Client.addEventHandler(onMessage, new NewMessage());
 
-Client.addEventHandler((event) => {
+Client.addEventHandler((event: EditedMessageEvent) => {
 	// @ts-expect-error
 	event.message._edit = new Date();
 	onMessage(event);
@@ -38,6 +38,11 @@ async function onMessage({ message, chatId }: NewMessageEvent) {
 
 	const listeners = (config.listeners as Listener[]).filter(listener => {
 		if (listener.blacklistedUsers && usernames.some(u => listener.blacklistedUsers.includes(u))) {
+			return false;
+		}
+
+		// @ts-expect-error
+		if (!listener.trackEdits && message._edit) {
 			return false;
 		}
 

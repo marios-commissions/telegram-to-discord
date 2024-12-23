@@ -21,6 +21,7 @@ export interface Listener {
 	blacklistedUsers?: string[];
 	hasContent?: string[];
 	excludeEmptyMessages?: boolean;
+	trackEdits?: boolean;
 	forwardTo?: string;
 	whitelist?: string[];
 	blacklist?: string[];
