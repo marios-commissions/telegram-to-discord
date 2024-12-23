@@ -1,15 +1,22 @@
 import type { Chat, Reply, Listener } from '~/typings/structs';
-import type { NewMessageEvent } from 'telegram/events';
+import { EditedMessage } from 'telegram/events/EditedMessage';
 import { codeblock, getContent, getFiles } from '~/utilities';
-import { NewMessage } from 'telegram/events';
+import type { NewMessageEvent } from 'telegram/events';
+import { type APIEmbed } from 'discord-api-types/v10';
 import { Client, Webhook } from '~/structures';
+import { NewMessage } from 'telegram/events';
 import { Api } from 'telegram';
 import config from '~/config';
-import { type APIEmbed } from 'discord-api-types/v10';
+
 
 Client.addEventHandler(onMessage, new NewMessage());
+Client.addEventHandler((event) => {
+	// @ts-expect-error
+	event.message._edit = new Date();
+	onMessage(event);
+}, new EditedMessage({}));
 
-async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; }) {
+async function onMessage({ message, chatId }: NewMessageEvent) {
 
 	const author = await message.getSender() as Api.User;
 	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
