@@ -1,4 +1,5 @@
 import type { Chat, Reply, Listener } from '@typings/structs';
+import { EditedMessage } from 'telegram/events/EditedMessage';
 import type { NewMessageEvent } from 'telegram/events';
 import { getContent, getFiles } from '~/utilities';
 import { NewMessage } from 'telegram/events';
@@ -6,9 +7,16 @@ import { Store, Client } from '~/lib';
 import { Api } from 'telegram';
 import config from '~/config';
 
+
 Client.addEventHandler(onMessage, new NewMessage());
 
-async function onMessage({ message, chatId }: NewMessageEvent & { chat: Chat; }) {
+Client.addEventHandler((event) => {
+	// @ts-expect-error
+	event.message._edit = new Date();
+	onMessage(event);
+}, new EditedMessage());
+
+async function onMessage({ message, chatId }: NewMessageEvent) {
 	if (!config.messages.commands && message.message.startsWith('/')) return;
 
 	const author = await message.getSender() as Api.User;
