@@ -416,7 +416,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	const content = [
 		listener.mention ? '@everyone' : '',
 		// @ts-expect-error
-		message._edit ? `__**Edited: ${new Date(message.editDate * 1000).toLocaleString()}**__` : '',
+		message._edit ? `__**Edited: <t:${message.editDate}:R>**__` : '',
 		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
@@ -483,7 +483,7 @@ async function onLinkedMessage({ chatId, message, author, chat, usernames, liste
 	const content = [
 		listener.mention ? '@everyone' : '',
 		// @ts-expect-error
-		message._edit ? `__**Edited: ${new Date(message.editDate * 1000).toLocaleString()}**__` : '',
+		message._edit ? `__**Edited: <t:${message.editDate}:R>**__` : '',
 		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User)?.username ?? 'Unknown'}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
@@ -552,7 +552,7 @@ async function onGroupMessage({ chatId, message, author, usernames, chat, listen
 	const content = [
 		listener.mention ? '@everyone' : '',
 		// @ts-expect-error
-		message._edit ? `__**Edited: ${new Date(message.editDate * 1000).toLocaleString()}**__` : '',
+		message._edit ? `__**Edited: <t:${message.editDate}:R>**__` : '',
 		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
