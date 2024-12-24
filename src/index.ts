@@ -1,10 +1,18 @@
 import sourcemaps from 'source-map-support';
+
+
 sourcemaps.install();
 
 import { Client, Webhook } from '~/structures';
-import config from '~/config';
+import { init } from '~/database';
+import config from '@config.json';
 
-Client.initialize();
+async function start() {
+	await init();
+	await Client.initialize();
+}
+
+start();
 
 if (config.errors.catch) {
 	process.on('uncaughtException', (error, origin) => {

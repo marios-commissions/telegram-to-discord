@@ -1,7 +1,7 @@
-import type { Listener } from '~/typings/structs';
+import type { Listener } from '@types';
 import { escape } from '~/utilities';
+import config from '@config.json';
 import { Api } from 'telegram';
-import config from '~/config';
 
 
 function getContent(msg: Api.Message, listener?: Listener, channel?: any) {

@@ -13,6 +13,15 @@ export type ReplyAction = {
 	title: string;
 } & Api.TypeMessageAction;
 
+export interface MessageContext {
+	message: any;
+	chat: Chat & { hasLink: boolean; broadcast: boolean; };
+	chatId: any;
+	author: Api.User;
+	usernames: string[];
+	isDM: boolean;
+}
+
 export interface Listener {
 	users?: string[];
 	replacements?: Record<string, string>;

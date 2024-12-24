@@ -5,3 +5,4 @@ export { default as getFiles } from './get-files';
 export { default as colorize } from './colorize';
 export { default as escape } from './escape';
 export { default as uuid } from './uuid';
+export { default as hash } from './hash';

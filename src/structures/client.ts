@@ -1,9 +1,9 @@
-import { Api, TelegramClient } from 'telegram';
-import input from 'input';
-
 import { ClientOptions, SessionName } from '~/constants';
 import { createLogger } from '~/structures/logger';
-import config from '~/config';
+import { Api, TelegramClient } from 'telegram';
+import config from '@config.json';
+import input from 'input';
+
 
 const Logger = createLogger('Client');
 
@@ -66,7 +66,7 @@ class Client extends TelegramClient {
 
 		Logger.info('Channels\n' + banner.join('\n'));
 
-		import('~/src/events');
+		import('~/events');
 	}
 }
 
