@@ -160,7 +160,7 @@ function processCielo(message: Api.Message, tokenAddress: string): ProcessedMess
 	};
 }
 
-async function processMessage(
+async function processCieloMessage(
 	chatId: string | number,
 	username: string,
 	guildname: string,
@@ -451,7 +451,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	const username = listener.includeForumChannelName ? channel.name : author?.username || author?.firstName || '';
 	const guildname = chat?.title || '';
 	const type = listener.type;
-	await processMessage(chatId.toString(), username, guildname, message, type);
+	await processCieloMessage(chatId.toString(), username, guildname, message, type);
 }
 
 async function onLinkedMessage({ chatId, message, author, chat, usernames, listener }: HandlerArguments) {
@@ -517,7 +517,7 @@ async function onLinkedMessage({ chatId, message, author, chat, usernames, liste
 	const username = listener.includeForumChannelName ? chat.title : author?.username || author?.firstName || '';
 	const guildname = chat?.title || '';
 	const type = listener.type;
-	await processMessage(chatId.toString(), username, guildname, message, type);
+	await processCieloMessage(chatId.toString(), username, guildname, message, type);
 }
 
 async function onGroupMessage({ chatId, message, author, usernames, chat, listener }: HandlerArguments) {
@@ -586,5 +586,5 @@ async function onGroupMessage({ chatId, message, author, usernames, chat, listen
 	const username = listener.includeForumChannelName ? chat.title : author?.username || author?.firstName || '';
 	const guildname = chat?.title || '';
 	const type = listener.type;
-	await processMessage(chatId.toString(), username, guildname, message, type);
+	await processCieloMessage(chatId.toString(), username, guildname, message, type);
 }
