@@ -1,11 +1,12 @@
 import { Client } from '~/structures';
-import { Paths } from '~/constants';
 import uuid from '~/utilities/uuid';
+import { Paths } from '~/constants';
 import mimeTypes from 'mime-types';
+import config from '@config.json';
 import { Api } from 'telegram';
-import config from '~/config';
 import path from 'path';
 import fs from 'fs';
+
 
 async function getFiles(message: Api.Message) {
 	const files = [];

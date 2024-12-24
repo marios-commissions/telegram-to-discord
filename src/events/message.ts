@@ -1,12 +1,13 @@
-import type { Chat, Reply, Listener } from '~/typings/structs';
 import { EditedMessage } from 'telegram/events/EditedMessage';
-import { codeblock, getContent, getFiles } from '~/utilities';
+import type { MessageContext, Chat, Reply, Listener } from '@types';
+import { codeblock, getContent, getFiles, hash } from '~/utilities';
+import { findMessageHash, insertMessageHash } from '~/database';
 import type { NewMessageEvent } from 'telegram/events';
 import { type APIEmbed } from 'discord-api-types/v10';
 import { Client, Webhook } from '~/structures';
 import { NewMessage } from 'telegram/events';
+import config from '@config.json';
 import { Api } from 'telegram';
-import config from '~/config';
 
 
 Client.addEventHandler(onMessage, new NewMessage());
@@ -222,100 +223,135 @@ async function processMessage(
 }
 
 async function onMessage({ message, chatId }: NewMessageEvent) {
-	const author = await message.getSender() as Api.User;
-	const chat = await message.getChat() as Chat & { hasLink: boolean; broadcast: boolean; };
-	if (!chat || !author) return;
+	const context = await getMessageContext(message, chatId);
+	if (!context) return;
 
-	const usernames = [...(author.usernames?.map(u => u?.username) ?? []), author.username, author?.id?.toString()].filter(Boolean);
-
-	if (usernames.length && usernames.some(u => config.messages.blacklist.includes(u))) {
-		Client._log.info('Preventing forward of blacklisted user: ' + usernames.join(' or '));
+	if (isBlacklisted(context.usernames)) {
+		Client._log.info('Preventing forward of blacklisted user: ' + context.usernames.join(' or '));
 		return;
 	}
 
-	// @ts-ignore
-	const isDM = chat.className === 'User';
+	logMessageInfo(context);
+
+	const listeners = getEligibleListeners(context);
+	if (!listeners.length) return;
+
+	if (!await shouldProcessEdit(message, chatId)) return;
+
+	await processMessage(context, listeners);
+}
+
+async function getMessageContext(message: any, chatId: any): Promise<MessageContext | null> {
+	const author = await message.getSender() as Api.User;
+	const chat = await message.getChat();
+	if (!chat || !author) return null;
+
+	const usernames = [
+		...(author.usernames?.map(u => u?.username) ?? []),
+		author.username,
+		author?.id?.toString()
+	].filter(Boolean);
+
+	return {
+		message,
+		chat,
+		chatId,
+		author,
+		usernames,
+		isDM: chat.className === 'User'
+	};
+}
+
+function isBlacklisted(usernames: string[]): boolean {
+	return usernames.some(u => config.messages.blacklist.includes(u));
+}
+
+function logMessageInfo({ chatId, author, chat, isDM, chat: { forum, hasLink, broadcast } }: MessageContext) {
+	const channelType = forum ? 'Forum' : (hasLink || broadcast) ? 'Linked' : 'Group/Private';
+	Client._log.info(
+		`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id} - Channel Type: ${channelType}`
+	);
+}
+
+function getEligibleListeners({ message, chatId, usernames }: MessageContext): Listener[] {
+	return (config.listeners as Listener[]).filter(listener => {
+		if (listener.blacklistedUsers?.some(u => usernames.includes(u))) return false;
+		if (!listener.trackEdits && message._edit) return false;
+		if (listener.hasContent?.length && !listener.hasContent.every(c => message.rawText?.includes(c))) return false;
+		if (listener.users?.length && !usernames.some(u => listener.users?.includes(u))) return false;
+		if (listener.group && listener.group !== chatId.toString()) return false;
+		if (!listener.commands && message.message.startsWith('/')) return false;
+		return true;
+	});
+}
+
+async function shouldProcessEdit(message: any, chatId: any): Promise<boolean> {
+	if (!message._edit) return true;
+
+	const messageHash = await findMessageHash(chatId.toString(), message.id.toString());
+	if (!messageHash) return true;
+
+	return messageHash !== hash(message.rawText);
+}
+
+async function processMessage(context: MessageContext, listeners: Listener[]) {
+	const { chat, message, chatId } = context;
+
+	const filteredListeners = filterListenersByType(listeners, context);
+	if (!filteredListeners.length) return;
+
+	for (const listener of filteredListeners) {
+		if (!isListenerValid(listener, context)) continue;
+
+		await handleMessage(listener, context);
+		await forwardMessage(message, listener);
+	}
+
+	const messageHash = hash(message.rawText);
+	await insertMessageHash(chatId.toString(), message.id.toString(), messageHash);
+}
+
+function filterListenersByType(listeners: Listener[], { chat }: MessageContext): Listener[] {
 	const isForum = chat.forum;
 	const isLinked = chat.hasLink || chat.broadcast;
 
-	Client._log.info(`New message from ${chatId}:${author?.username ?? chat?.title}:${author?.id ?? chat?.id} - Channel Type: ${isForum ? 'Forum' : isLinked ? 'Linked' : 'Group/Private'}`);
-
-	const listeners = (config.listeners as Listener[]).filter(listener => {
-		if (listener.blacklistedUsers && usernames.some(u => listener.blacklistedUsers.includes(u))) {
-			return false;
-		}
-
-		if (listener.hasContent?.length && !listener.hasContent.every(c => message.rawText?.includes(c))) {
-			return false;
-		}
-
-		if (listener.users?.length && !usernames.some(u => listener.users?.includes(u))) {
-			return false;
-		}
-
-		if (listener.group && listener.group != chatId.toString()) {
-			return false;
-		}
-
-		if (!listener.commands && message.message.startsWith('/')) {
-			return false;
-		}
-
-		return true;
+	return listeners.filter(l => {
+		if (isForum) return l.forum || (!l.group && l.users?.length);
+		if (isLinked) return (chat.hasLink ? l.linked : true) || (!l.group && l.users?.length);
+		return !l.forum || (!l.group && l.users?.length);
 	});
+}
 
-	if (!listeners.length) return;
+function isListenerValid(listener: Listener, { chatId, isDM, message }: MessageContext): boolean {
+	if (listener.whitelistOnly && !(listener.whitelist ?? []).includes(chatId.toString())) return false;
+	if (!listener.whitelistOnly && (listener.blacklist ?? []).includes(chatId.toString())) return false;
+	if (!listener.stickers && message.sticker) return false;
+	if (isDM && !listener.allowDMs) return false;
+	return true;
+}
+
+async function handleMessage(listener: Listener, context: MessageContext) {
+	const { chat, message } = context;
+
+	const isForum = chat.forum;
+	const isLinked = chat.hasLink || chat.broadcast;
 
 	if (isForum) {
 		const reply = await message.getReplyMessage() as Reply;
-
-		for (const listener of listeners.filter(l => l.forum || (!l.group && l.users?.length)) as Listener[]) {
-			if (listener.whitelistOnly && !(listener.whitelist ?? []).includes(chatId.toString())) continue;
-			if (!listener.whitelistOnly && (listener.blacklist ?? []).includes(chatId.toString())) continue;
-			if (!listener.stickers && message.sticker) continue;
-			if (isDM && !listener.allowDMs) continue;
-
-			onForumMessage({ message, chat, chatId, author, reply, listener, usernames });
-
-			if (listener.forwardTo) {
-				const chat = await Client.getEntity(listener.forwardTo);
-				if (!chat) continue;
-
-				await message.forwardTo(chat);
-			}
-		}
+		onForumMessage({ ...context, reply, listener });
 	} else if (isLinked) {
-		for (const listener of listeners.filter(l => chat.hasLink ? l.linked : true || (!l.group && l.users?.length)) as Listener[]) {
-			if (listener.whitelistOnly && !(listener.whitelist ?? []).includes(chatId.toString())) continue;
-			if (!listener.whitelistOnly && (listener.blacklist ?? []).includes(chatId.toString())) continue;
-			if (!listener.stickers && message.sticker) continue;
-			if (isDM && !listener.allowDMs) continue;
-
-			onLinkedMessage({ message, chat, chatId, author, listener, usernames });
-
-			if (listener.forwardTo) {
-				const chat = await Client.getEntity(listener.forwardTo);
-				if (!chat) continue;
-
-				await message.forwardTo(chat);
-			}
-		}
+		onLinkedMessage({ ...context, listener });
 	} else {
-		for (const listener of listeners.filter(l => !l.forum || (!l.group && l.users?.length)) as Listener[]) {
-			if (listener.whitelistOnly && !(listener.whitelist ?? []).includes(chatId.toString())) continue;
-			if (!listener.whitelistOnly && (listener.blacklist ?? []).includes(chatId.toString())) continue;
-			if (!listener.stickers && message.sticker) continue;
-			if (isDM && !listener.allowDMs) continue;
+		onGroupMessage({ ...context, listener });
+	}
+}
 
-			onGroupMessage({ message, chat, chatId, author, listener, usernames });
+async function forwardMessage(message: any, listener: Listener) {
+	if (!listener.forwardTo) return;
 
-			if (listener.forwardTo) {
-				const chat = await Client.getEntity(listener.forwardTo);
-				if (!chat) continue;
-
-				await message.forwardTo(chat);
-			}
-		}
+	const chat = await Client.getEntity(listener.forwardTo);
+	if (chat) {
+		await message.forwardTo(chat);
 	}
 }
 
@@ -380,7 +416,7 @@ async function onForumMessage({ message, author, chat, chatId, reply, listener, 
 	const content = [
 		listener.mention ? '@everyone' : '',
 		// @ts-expect-error
-		message._edit ? `__**Edited: ${message._edit.toLocaleString()}**__` : '',
+		message._edit ? `__**Edited: ${new Date(message.editDate * 1000).toLocaleString()}**__` : '',
 		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
@@ -447,7 +483,7 @@ async function onLinkedMessage({ chatId, message, author, chat, usernames, liste
 	const content = [
 		listener.mention ? '@everyone' : '',
 		// @ts-expect-error
-		message._edit ? `__**Edited: ${message._edit.toLocaleString()}**__` : '',
+		message._edit ? `__**Edited: ${new Date(message.editDate * 1000).toLocaleString()}**__` : '',
 		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User)?.username ?? 'Unknown'}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
@@ -516,7 +552,7 @@ async function onGroupMessage({ chatId, message, author, usernames, chat, listen
 	const content = [
 		listener.mention ? '@everyone' : '',
 		// @ts-expect-error
-		message._edit ? `__**Edited: ${message._edit.toLocaleString()}**__` : '',
+		message._edit ? `__**Edited: ${new Date(message.editDate * 1000).toLocaleString()}**__` : '',
 		message.forward && `__**Forwarded from ${(message.forward.sender as Api.User).username}**__`,
 		(!shouldEmbedReply && shouldShowReply) ? replyText : '',
 		messageText
