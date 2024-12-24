@@ -4,3 +4,4 @@ files
 .keepsecret
 config.json
 messages.json
+db.sqlite
